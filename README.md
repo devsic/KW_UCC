@@ -24,8 +24,11 @@ using raspberry pi and detecting environment sensor
   
 3.Port and Sensor set and run
 
-
+  git clone https://github.com/devsic/KW_UCC.git
+  
   cd Adafruit_DHT
+  
+  sudo python setup.py install
   
   
   cd examples
