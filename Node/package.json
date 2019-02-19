@@ -11,6 +11,7 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
+    "fcm-node": "^1.3.0",
     "mongoose": "^5.4.13"
   }
 }
