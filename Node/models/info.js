@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 var infoSchema = new Schema({
     user_id: String,
     gps: String,
-    timestamp : Date
+    timestamp : Date// 지워줄 것.
 });
 
 // module.exports를 사용하여 해당 model을 반환.
