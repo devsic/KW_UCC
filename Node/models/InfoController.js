@@ -22,7 +22,7 @@ router.post('/infos/gps', function(req, res){
     var info = new Info();
     info.user_id = req.body.user_id;
     info.gps = req.body.gps;
-    info.timestamp = req.body.timestamp;
+    //info.timestamp = req.body.timestamp;
     
     info.save(function(err){
         if(err){
@@ -52,11 +52,12 @@ router.get('/infos/gps/:userid',function(req,res){
 router.get('/infos/gps/:userid/recent',function(req,res){
     
     // 각 query마다 callback을 달아 진행한다면 비동기이기 때문에 결과가 이상해짐.
-    // 따라서 sequenct하게 쿼리를 처리 후 exec를 해주면 됨.
+    // 따라서 sequence하게 쿼리를 처리 후 exec를 해주면 됨.
     Info.find({user_id: req.params.userid}).sort({"_id": -1}).findOne().exec(function(err,output){
         if(err) return res.status(500).json({error: err});
         if(!output) return res.status(404).json({error: 'user not found in Info collections.'});
-        console.log(output.user_id +" "+output.gps+" "+output.timestamp);
+        //console.log(output.user_id +" "+output.gps+" "+output.timestamp);
+        console.log(output.user_id +" "+output.gps);
         res.json(output);
     });
 });

@@ -4,8 +4,7 @@ var Schema = mongoose.Schema;
 // document가 모여서 group(table)
 var infoSchema = new Schema({
     user_id: String,
-    gps: String,
-    timestamp : Date// 지울것.
+    gps: String
 });
 
 // module.exports를 사용하여 해당 model을 반환.

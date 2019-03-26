@@ -20,20 +20,22 @@ public class FireBaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
 
-
-
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         Log.d(TAG, "From: " + remoteMessage.getFrom());
+        // getData에 내가 받은 data가 들어있음.
+        // server측에서 body에 data라는 이름으로 보내주기 때문.
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             if (true) {
-
+                /** 여기서 받아온 Gps와 내 gps를 비교하여 UI 구성.
+                 * 아래 send 부분은 이 부분 구현 후 지워줘도 될 듯. 디버깅용.
+                 */
             } else {
                 handleNow();
             }
         }
-
+        // server측에서 notification으로 보내주는 부분.
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
             sendNotification(remoteMessage.getNotification().getBody());
@@ -45,8 +47,9 @@ public class FireBaseMessagingService extends FirebaseMessagingService {
     }
 
 
-
+    // 상단 notification message 출력해주는 부분.
     private void sendNotification(String messageBody) {
+        Log.d(TAG, "Send Notification");
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,

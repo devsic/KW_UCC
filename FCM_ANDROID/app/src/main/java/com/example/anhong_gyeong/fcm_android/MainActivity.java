@@ -20,24 +20,31 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
-    Button button_post;
+    Button button_gps,button_fcm;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        button_post = findViewById(R.id.button_post);
-        button_post.setOnClickListener(new View.OnClickListener() {
+        button_gps = findViewById(R.id.button_gps);
+        button_fcm = findViewById(R.id.button_fcm);
+        button_gps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                postData();
+                postGpsData();
+            }
+        });
+        button_fcm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PostFcmData();
             }
         });
     }
 
-    public void postData() {
+    public void postGpsData() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.35.64:8080/")
+                .baseUrl("http://192.168.43.82:8080/")
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
@@ -52,6 +59,52 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         Call<RetrofitRepo> call = service.postGps(paramObject.toString());
+        call.enqueue(new Callback<RetrofitRepo>() {
+            @Override
+            public void onResponse(Call<RetrofitRepo> call, Response<RetrofitRepo> response) {
+                if (response.isSuccessful()) {
+                    //Log.d("TEST",response.body().toString());
+                    // Get response body
+                } else if (response.errorBody() != null) {
+                    // Get response errorBody
+                    try {
+                        String errorBody = response.errorBody().string();
+                        Log.d("onResponse", "ERROR:" + errorBody);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                //Log.d("onResponse","ERROR:"+response.body().toString());
+            }
+
+            @Override
+            public void onFailure(Call<RetrofitRepo> call, Throwable t) {/////////////여기 콜됨.
+                //for getting error in network put here Toast, so get the error on network
+                Log.d("OnFailure", t.getMessage());
+            }
+        });
+    }
+
+
+    public void PostFcmData() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://192.168.43.82:8080/")
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        RetrofitService service = retrofit.create(RetrofitService.class);
+        //
+        JSONObject paramObject = new JSONObject();
+        try {
+            paramObject.put("beacon_id", "temp");
+            paramObject.put("user_id", "AHK");
+            paramObject.put("score", "android_fcmScore_example");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        //
+        Call<RetrofitRepo> call = service.postFcm(paramObject.toString());
         call.enqueue(new Callback<RetrofitRepo>() {
             @Override
             public void onResponse(Call<RetrofitRepo> call, Response<RetrofitRepo> response) {

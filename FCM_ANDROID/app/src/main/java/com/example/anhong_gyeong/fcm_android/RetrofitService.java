@@ -7,10 +7,14 @@ import retrofit2.http.Headers;
 import retrofit2.http.POST;
 
 public interface RetrofitService {
-
+    // body : parameter로 Json 객체를 전달.
     @Headers("Content-Type: application/json")
     @POST("infos/gps/")
     Call<RetrofitRepo> postGps(@Body String body);
+
+    @Headers("Content-Type: application/json")
+    @POST("fcm/")
+    Call<RetrofitRepo> postFcm(@Body String body);
 
     /*
     @GET("users")
