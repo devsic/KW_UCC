@@ -122,14 +122,14 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        /*
         myCompositeDisposable.add(service.postGps(paramObject.toString())
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe());
 
-
+        */
         // Rxjava사용하여 io thread하나 파서 하는게 나을 듯.
-        /*
+
         Call<RetrofitRepo> call = service.postGps(paramObject.toString());
         call.enqueue(new Callback<RetrofitRepo>() {
             @Override
@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("OnFailure", t.getMessage());
             }
         });
-        */
+
     }
 
 
