@@ -1,6 +1,9 @@
 package com.example.anhong_gyeong.fcm_android;
 
 
+
+
+import io.reactivex.Observable;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Headers;
@@ -10,7 +13,7 @@ public interface RetrofitService {
     // body : parameter로 Json 객체를 전달.
     @Headers("Content-Type: application/json")
     @POST("infos/gps/")
-    Call<RetrofitRepo> postGps(@Body String body);
+    Observable<RetrofitRepo> postGps(@Body String body);
 
     @Headers("Content-Type: application/json")
     @POST("fcm/")

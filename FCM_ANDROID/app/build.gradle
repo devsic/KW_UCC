@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.example.anhong_gyeong.fcm_android"
-        minSdkVersion 15
+        minSdkVersion 22
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -31,5 +31,8 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
     implementation 'com.squareup.retrofit2:converter-scalars:2.3.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.0'
+    implementation 'com.estimote:proximity-sdk:1.0.3'
+    implementation 'com.estimote:mustard:0.2.1'
 }
 apply plugin: 'com.google.gms.google-services'
