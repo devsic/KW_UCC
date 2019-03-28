@@ -10,17 +10,30 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Button;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.Map;
 
+
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 
 public class FireBaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
+    /**
+     * data : Observable. data 발행.
+     * getObservable : Acticity측에서 Obesrvable 참조 위한 getter.
+     * Map<String,String> : Server에서 body에 담아서 보내준 FCM message. gps와 score 정보가 담겨있음.
+     * 원래 이렇게 static으로 하여 구현하는가? issue는 없는가? // MainActivity에서 Observable 객체 참조하려고 이렇게 사용했음.
+     */
+    static PublishSubject<Map<String,String>> data = PublishSubject.create();
 
+    public static Observable<Map<String,String>> getObservable(){
+        return data;
+    }
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         Log.d(TAG, "From: " + remoteMessage.getFrom());
@@ -30,20 +43,19 @@ public class FireBaseMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             if (true) {
-                /** 여기서 받아온 Gps와 내 gps를 비교하여 UI 구성.
-                 * 아래 send 부분은 이 부분 구현 후 지워줘도 될 듯. 디버깅용.
-                 */
+                // Message로 받아온 Data에 대한 처리.
+                // remoteMessage.getData() 발행.
+                data.onNext(remoteMessage.getData());
             } else {
                 handleNow();
             }
         }
-        // server측에서 notification으로 보내주는 부분.
+        // Firebase server측에서 notification으로 보내주는 부분.
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
             sendNotification(remoteMessage.getNotification().getBody());
         }
     }
-
     private void handleNow() {
         Log.d(TAG, "Short lived task is done.");
     }

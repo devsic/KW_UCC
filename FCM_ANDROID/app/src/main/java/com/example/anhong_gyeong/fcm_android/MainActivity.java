@@ -1,11 +1,11 @@
 package com.example.anhong_gyeong.fcm_android;
 
-import android.support.annotation.WorkerThread;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.estimote.mustard.rx_goodness.rx_requirements_wizard.Requirement;
 import com.estimote.mustard.rx_goodness.rx_requirements_wizard.RequirementsWizardFactory;
@@ -13,37 +13,29 @@ import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
-
-import java.io.IOException;
 import java.util.List;
-import java.util.Observable;
+import java.util.Map;
 
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
-import retrofit.RxJavaCallAdapterFactory;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
+
 /**
  * postGPS -> service로 뺄 것.
  *
-
+ *  lambda로 코드 깔끔하게 수정할 것.
  */
 public class MainActivity extends AppCompatActivity {
     Button buttonGps,buttonFcm;
+    TextView textViewFcm;
     Retrofit retrofit;
     RetrofitService service;
     CompositeDisposable myCompositeDisposable;
@@ -54,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
         buttonGps = findViewById(R.id.button_gps);
         buttonFcm = findViewById(R.id.button_fcm);
+        textViewFcm = findViewById(R.id.textview_fcm);
         myCompositeDisposable = new CompositeDisposable();
         initRetrofit();
 
@@ -71,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
                 PostFcmData();
             }
         });
-
-
+        // fcm Message 받았을 때 main에서의 동작 구현.
+        ReceiceFcm();
 
         // 권한 설정 부분 + 비콘 모니터링 시작 부분
         /**
@@ -117,14 +110,46 @@ public class MainActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         service = retrofit.create(RetrofitService.class);
+
     }
 
+    /**
+     * onNext : FCM Message 받았을 때 gps값을 통하여 logic 구현.
+     * subscribeOn을 좀 더 고민해볼 것. FCM service가 어떻게 구현돼있는지 모르겠음. subscribeOn을 통해 새로운 스레드를 또 만들어줄 필요가 있나?
+     * FireBaseMessagingService의 onMessageReceived가 호출되어 data(Observable객체)가 발행됐을 때 subscribeWith로 구독하여 소비하는 과정.
+     */
+    public void ReceiceFcm(){
+        myCompositeDisposable.add(FireBaseMessagingService.getObservable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribeWith(new DisposableObserver<Map<String, String>>() {
+                    @Override
+                    public void onNext(Map<String, String> stringStringMap) {
+                        textViewFcm.setText(stringStringMap.get("gps"));
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                })
+        );
+    }
+
+    /**
+     * gps logging해주는 함수. Service로 만들어서 빼줄 것.
+     */
     public void postGpsData() {
         //body에 넣을 데이터
         JSONObject paramObject = new JSONObject();
         try {
             paramObject.put("user_id", "PMJ");
-            paramObject.put("gps", "android_gps_example");
+            paramObject.put("gps", "android_gps_example2");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -180,13 +205,15 @@ public class MainActivity extends AppCompatActivity {
         });
         */
     }
-
+    /**
+     * FCM message를 전송해주는 함수. 비콘 ID를 list로 관리 + 서비스에서 스코어링 임계치 넘은 event가 발생시에 PostFcmData실행. 그냥 subscribe(PostFcmData())해줘도 될 듯.
+     */
     public void PostFcmData() {
         // body에 넣을 데이터
         JSONObject paramObject = new JSONObject();
         try {
             paramObject.put("beacon_id", "temp");
-            paramObject.put("user_id", "AHK");
+            paramObject.put("user_id", "PMJ");
             paramObject.put("score", "android_fcmScore_example");
         } catch (JSONException e) {
             e.printStackTrace();
