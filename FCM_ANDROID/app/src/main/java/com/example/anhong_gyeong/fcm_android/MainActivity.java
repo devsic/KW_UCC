@@ -9,6 +9,7 @@ import android.widget.Button;
 
 import com.estimote.mustard.rx_goodness.rx_requirements_wizard.Requirement;
 import com.estimote.mustard.rx_goodness.rx_requirements_wizard.RequirementsWizardFactory;
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,10 +24,12 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
+import retrofit.RxJavaCallAdapterFactory;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -51,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         buttonGps = findViewById(R.id.button_gps);
         buttonFcm = findViewById(R.id.button_fcm);
+        myCompositeDisposable = new CompositeDisposable();
         initRetrofit();
 
         // gps logging. service로 뺄 것.
@@ -108,11 +112,13 @@ public class MainActivity extends AppCompatActivity {
     public void initRetrofit(){
         retrofit = new Retrofit.Builder()
                 .baseUrl("http://192.168.43.82:8080/")
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         service = retrofit.create(RetrofitService.class);
     }
+
     public void postGpsData() {
         //body에 넣을 데이터
         JSONObject paramObject = new JSONObject();
@@ -123,15 +129,30 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-
         myCompositeDisposable.add(service.postGps(paramObject.toString())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe());
-        /*
+                .subscribeWith(new DisposableObserver<RetrofitRepo>() {
+                    @Override
+                    public void onNext(RetrofitRepo retrofitRepo) {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.d("postGps","Completed postGps");
+                    }
+                })
+        );
+
 
         // Rxjava사용하여 io thread하나 파서 하는게 나을 듯.
-
+        /*
         Call<RetrofitRepo> call = service.postGps(paramObject.toString());
         call.enqueue(new Callback<RetrofitRepo>() {
             @Override
@@ -157,9 +178,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("OnFailure", t.getMessage());
             }
         });
-    */
+        */
     }
-
 
     public void PostFcmData() {
         // body에 넣을 데이터
@@ -171,7 +191,28 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        //
+        myCompositeDisposable.add(service.postFcm(paramObject.toString())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribeWith(new DisposableObserver<RetrofitRepo>() {
+                    @Override
+                    public void onNext(RetrofitRepo retrofitRepo) {
+                        Log.d("postFCM","Completed postFCM");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.d("postFCM","Completed postFCM");
+                    }
+                })
+        );
+
+        /*
         Call<RetrofitRepo> call = service.postFcm(paramObject.toString());
         call.enqueue(new Callback<RetrofitRepo>() {
             @Override
@@ -196,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
                 //for getting error in network put here Toast, so get the error on network
                 Log.d("OnFailure", t.getMessage());
             }
-        });
+        });*/
     }
 
     @Override
