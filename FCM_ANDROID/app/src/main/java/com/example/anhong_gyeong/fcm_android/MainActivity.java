@@ -13,6 +13,8 @@ import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     Retrofit retrofit;
     RetrofitService service;
     CompositeDisposable myCompositeDisposable;
+    ArrayList<String> beaconList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         buttonFcm = findViewById(R.id.button_fcm);
         textViewFcm = findViewById(R.id.textview_fcm);
         myCompositeDisposable = new CompositeDisposable();
+        beaconList = new ArrayList<>();
         initRetrofit();
 
         // gps logging. service로 뺄 것.
@@ -66,7 +70,8 @@ public class MainActivity extends AppCompatActivity {
         });
         // fcm Message 받았을 때 main에서의 동작 구현.
         ReceiveFcm();
-
+        // beacon 범위내에 들어올 때 beaconId list에 저장.
+        SaveBeaconId();
         // 권한 설정 부분 + 비콘 모니터링 시작 부분
         /**
          * Function0 : 비콘 모니터링
@@ -111,6 +116,40 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         service = retrofit.create(RetrofitService.class);
 
+    }
+
+    /**
+     * 비콘의 onEnter범위 내 진입시에 브로드캐스팅 되는 비콘 id list로 저장
+     * 아이디 notification 클릭시에 새로운 activity가 실행되면서 여러 activity가 다 받음. 따라서 중복 logging 진행 되는것.
+     */
+    public void SaveBeaconId(){
+        myCompositeDisposable.add(NotificationsManager.getBeaconObservable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribeWith(new DisposableObserver<String>(){
+
+                    @Override
+                    public void onNext(String s) {
+                        if(!beaconList.contains(s)){
+                            beaconList.add(s);
+                            Log.d("OnNext Beacon add: ",s);
+                        }
+                        for(int i=0; i<beaconList.size(); i++) {
+                            Log.d("Beacon List "+i,beaconList.get(i));
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                })
+        );
     }
 
     /**

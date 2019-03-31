@@ -15,6 +15,10 @@ import com.estimote.proximity_sdk.api.ProximityZone;
 import com.estimote.proximity_sdk.api.ProximityZoneBuilder;
 import com.estimote.proximity_sdk.api.ProximityZoneContext;
 
+import java.util.Map;
+
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
@@ -29,6 +33,13 @@ public class NotificationsManager {
     private Notification helloNotification;
     private Notification goodbyeNotification;
     private int notificationId = 1;//여기 beaconid 넣어주면 될 듯함.
+
+   ////////////////////////////////////////////////////////////////////////////////////////
+    static PublishSubject<String> beacon_data = PublishSubject.create();
+
+    public static Observable<String> getBeaconObservable(){
+        return beacon_data;
+    }
 
     public NotificationsManager(Context context) {
         this.context = context;
@@ -74,7 +85,7 @@ public class NotificationsManager {
         ProximityZone zone = new ProximityZoneBuilder()
                 .forTag("monitoringexample-8mi")
                 //.inFarRange()
-                .inCustomRange(50.0)
+                .inCustomRange(3.0)
                 .onEnter(new Function1<ProximityZoneContext, Unit>() {
                     @Override
                     public Unit invoke(ProximityZoneContext proximityContext) {
@@ -84,9 +95,11 @@ public class NotificationsManager {
                          * 여기서 list에 비콘 Id put만 해둘 것.
                          * 나중에 스코어링 넘어갈 시에 list를 참조하여 postFCM
                          */
-
+                        beacon_data.onNext(proximityContext.getDeviceId());
+                        //beacon_data.onComplete();
                         helloNotification = buildNotification("Hello", proximityContext.getDeviceId());
                         notificationManager.notify(notificationId, helloNotification);
+                        //Log.d("BeaconOnEnter",proximityContext.getDeviceId());
                         return null;
                     }
                 })
