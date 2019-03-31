@@ -31,7 +31,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 /**
  * postGPS -> service로 뺄 것.
  *
- *  lambda로 코드 깔끔하게 수정할 것.
+ * lambda로 코드 깔끔하게 수정할 것.
  */
 public class MainActivity extends AppCompatActivity {
     Button buttonGps,buttonFcm;
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         // fcm Message 받았을 때 main에서의 동작 구현.
-        ReceiceFcm();
+        ReceiveFcm();
 
         // 권한 설정 부분 + 비콘 모니터링 시작 부분
         /**
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
      * subscribeOn을 좀 더 고민해볼 것. FCM service가 어떻게 구현돼있는지 모르겠음. subscribeOn을 통해 새로운 스레드를 또 만들어줄 필요가 있나?
      * FireBaseMessagingService의 onMessageReceived가 호출되어 data(Observable객체)가 발행됐을 때 subscribeWith로 구독하여 소비하는 과정.
      */
-    public void ReceiceFcm(){
+    public void ReceiveFcm(){
         myCompositeDisposable.add(FireBaseMessagingService.getObservable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
