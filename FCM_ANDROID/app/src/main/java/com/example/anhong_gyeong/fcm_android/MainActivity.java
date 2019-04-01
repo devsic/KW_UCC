@@ -1,5 +1,9 @@
 package com.example.anhong_gyeong.fcm_android;
 
+
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,6 +13,7 @@ import android.widget.TextView;
 
 import com.estimote.mustard.rx_goodness.rx_requirements_wizard.Requirement;
 import com.estimote.mustard.rx_goodness.rx_requirements_wizard.RequirementsWizardFactory;
+import com.estimote.proximity_sdk.api.ProximityZoneContext;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 import org.json.JSONException;
@@ -58,14 +63,15 @@ public class MainActivity extends AppCompatActivity {
         buttonGps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                postGpsData();
+                postGpsData(FirebaseInstanceIDService.refreshedToken);
             }
         });
         // fcm call. List에 존재하는 비콘 id로 다 보내고 list clear.
         buttonFcm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PostFcmData();
+                //PostFcmData();
+                buttonFcm.setText(FirebaseInstanceIDService.refreshedToken);
             }
         });
         // fcm Message 받았을 때 main에서의 동작 구현.
@@ -105,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
                                 return null;
                             }
                         });
+
     }
 
     public void initRetrofit(){
@@ -117,31 +124,38 @@ public class MainActivity extends AppCompatActivity {
         service = retrofit.create(RetrofitService.class);
 
     }
+    public void ReceiveFlag(){
 
+    }
     /**
      * 비콘의 onEnter범위 내 진입시에 브로드캐스팅 되는 비콘 id list로 저장
-     * 아이디 notification 클릭시에 새로운 activity가 실행되면서 여러 activity가 다 받음. 따라서 중복 logging 진행 되는것.
+     * 아이디 notification 클릭시에 새로운 activity가 실행되면서 여러 activity가 다 받음. 따라서 중복 logging 진행 되는것.// Activity flag줘서 기존거 쓰거나 하면 될 듯.
      */
     public void SaveBeaconId(){
-        myCompositeDisposable.add(NotificationsManager.getBeaconObservable()
+        //myCompositeDisposable.add(NotificationsManager.getBeaconObservable()
+        myCompositeDisposable.add(BeaconService.getBeaconObservable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribeWith(new DisposableObserver<String>(){
-
+                .subscribeWith(new DisposableObserver<ProximityZoneContext[]>() {
                     @Override
-                    public void onNext(String s) {
-                        if(!beaconList.contains(s)){
-                            beaconList.add(s);
-                            Log.d("OnNext Beacon add: ",s);
+                    public void onNext(ProximityZoneContext[] proximityZoneContexts) {
+                        for(int i=0; i<proximityZoneContexts.length; i++) {
+                            String bId = proximityZoneContexts[i].getDeviceId();
+                            if (!beaconList.contains(bId)) {
+                                beaconList.add(bId);
+                                Log.d("OnNext Beacon add: ", bId);
+                                PostFcmData(bId,FirebaseInstanceIDService.refreshedToken,"ScoreData");
+                            }
                         }
                         for(int i=0; i<beaconList.size(); i++) {
                             Log.d("Beacon List "+i,beaconList.get(i));
                         }
+
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        e.printStackTrace();
+
                     }
 
                     @Override
@@ -183,12 +197,12 @@ public class MainActivity extends AppCompatActivity {
     /**
      * gps logging해주는 함수. Service로 만들어서 빼줄 것.
      */
-    public void postGpsData() {
+    public void postGpsData(String userId) {
         //body에 넣을 데이터
         JSONObject paramObject = new JSONObject();
         try {
-            paramObject.put("user_id", "PMJ");
-            paramObject.put("gps", "android_gps_example2");
+            paramObject.put("user_id", userId);
+            paramObject.put("gps", "android_gps_fcm_example");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -247,13 +261,13 @@ public class MainActivity extends AppCompatActivity {
     /**
      * FCM message를 전송해주는 함수. 비콘 ID를 list로 관리 + 서비스에서 스코어링 임계치 넘은 event가 발생시에 PostFcmData실행. 그냥 subscribe(PostFcmData())해줘도 될 듯.
      */
-    public void PostFcmData() {
+    public void PostFcmData(String beaconId,String userId,String score) {
         // body에 넣을 데이터
         JSONObject paramObject = new JSONObject();
         try {
-            paramObject.put("beacon_id", "temp");
-            paramObject.put("user_id", "PMJ");
-            paramObject.put("score", "android_fcmScore_example");
+            paramObject.put("beacon_id", beaconId);
+            paramObject.put("user_id", userId);
+            paramObject.put("score", score);
         } catch (JSONException e) {
             e.printStackTrace();
         }

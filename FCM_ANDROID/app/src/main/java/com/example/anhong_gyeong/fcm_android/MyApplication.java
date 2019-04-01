@@ -1,6 +1,10 @@
 package com.example.anhong_gyeong.fcm_android;
 
+import android.app.ActivityManager;
 import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
 
 import com.estimote.proximity_sdk.api.EstimoteCloudCredentials;
 
@@ -14,8 +18,26 @@ public class MyApplication extends Application {
     private NotificationsManager notificationsManager;
 
     public void enableBeaconNotifications() {
-        notificationsManager = new NotificationsManager(this);
-        notificationsManager.startMonitoring();
+        //notificationsManager = new NotificationsManager(this);
+        //notificationsManager.startMonitoring();
+
+        if(!isMyServiceRunning(BeaconService.class)) {
+            Intent intent = new Intent(this, BeaconService.class);
+            startService(intent);
+            Log.d("BeaconService","Service is first running");
+        }
+        else{
+            Log.d("BeaconService","Service is already running");
+        }
+    }
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
