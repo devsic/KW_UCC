@@ -1,24 +1,31 @@
 package com.example.anhong_gyeong.fcm_android;
 import com.google.firebase.iid.FirebaseInstanceId;
+
+import android.content.SharedPreferences;
 import android.util.Log;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 
 public class FirebaseInstanceIDService extends FirebaseInstanceIdService {
 
     private static final String TAG = "MyFirebaseInstanceID";
-    public static String refreshedToken;
+    // preference(설정값)
+    // sqlite
 
 
     @Override
 
     public void onTokenRefresh() {
 
-        refreshedToken = FirebaseInstanceId.getInstance().getToken();
+        String refreshedToken = FirebaseInstanceId.getInstance().getToken();
 
         Log.d(TAG, "Refreshed token: " + refreshedToken);
 
         sendRegistrationToServer(refreshedToken);
 
+        SharedPreferences pref = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("RefreshedToken",refreshedToken);
+        editor.commit();
     }
 
 

@@ -4,6 +4,7 @@ package com.example.anhong_gyeong.fcm_android;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -41,12 +42,14 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
  * lambda로 코드 깔끔하게 수정할 것.
  */
 public class MainActivity extends AppCompatActivity {
+    ///
     Button buttonGps,buttonFcm;
     TextView textViewFcm;
     Retrofit retrofit;
     RetrofitService service;
     CompositeDisposable myCompositeDisposable;
     ArrayList<String> beaconList;
+    String bId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,7 +66,9 @@ public class MainActivity extends AppCompatActivity {
         buttonGps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                postGpsData(FirebaseInstanceIDService.refreshedToken);
+                SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
+                String refreshedToken = prefs.getString("RefreshedToken", "");
+                postGpsData(refreshedToken);
             }
         });
         // fcm call. List에 존재하는 비콘 id로 다 보내고 list clear.
@@ -71,7 +76,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //PostFcmData();
-                buttonFcm.setText(FirebaseInstanceIDService.refreshedToken);
+                SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
+                String refreshedToken = prefs.getString("RefreshedToken", "");
+                for(int i=0; i<beaconList.size(); i++) {
+                    PostFcmData(beaconList.get(i),refreshedToken,"ScoreData");
+                }
+                textViewFcm.setText(refreshedToken);
             }
         });
         // fcm Message 받았을 때 main에서의 동작 구현.
@@ -140,11 +150,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onNext(ProximityZoneContext[] proximityZoneContexts) {
                         for(int i=0; i<proximityZoneContexts.length; i++) {
-                            String bId = proximityZoneContexts[i].getDeviceId();
+                            bId = proximityZoneContexts[i].getDeviceId();
                             if (!beaconList.contains(bId)) {
                                 beaconList.add(bId);
                                 Log.d("OnNext Beacon add: ", bId);
-                                PostFcmData(bId,FirebaseInstanceIDService.refreshedToken,"ScoreData");
+                                //PostFcmData(bId,FirebaseInstanceIDService.refreshedToken,"ScoreData");
                             }
                         }
                         for(int i=0; i<beaconList.size(); i++) {
