@@ -24,6 +24,7 @@ public class FirebaseInstanceIDService extends FirebaseInstanceIdService {
 
         SharedPreferences pref = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
+        Log.d("FirebaseService","RefreshedPreference");
         editor.putString("RefreshedToken",refreshedToken);
         editor.commit();
     }

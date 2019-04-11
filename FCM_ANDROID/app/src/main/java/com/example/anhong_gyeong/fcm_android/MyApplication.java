@@ -17,7 +17,7 @@ public class MyApplication extends Application {
     public EstimoteCloudCredentials cloudCredentials = new EstimoteCloudCredentials("anhongkyung-s-your-own-app-nal", "271adf23dd0ba6562d80219e91812091");
     private NotificationsManager notificationsManager;
 
-    public void enableBeaconNotifications() {
+    public void enableService() {
         //notificationsManager = new NotificationsManager(this);
         //notificationsManager.startMonitoring();
 
@@ -29,6 +29,16 @@ public class MyApplication extends Application {
         else{
             Log.d("BeaconService","Service is already running");
         }
+
+        if(!isMyServiceRunning(SocketService.class)) {
+            Intent intent = new Intent(getApplicationContext(), SocketService.class);
+            startService(intent);
+            Log.d("SocketService","SocketService is first running");
+        }
+        else{
+            Log.d("SocketService","SocketService is already running");
+        }
+
     }
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
