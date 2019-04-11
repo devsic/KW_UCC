@@ -39,6 +39,14 @@ public class MyApplication extends Application {
             Log.d("SocketService","SocketService is already running");
         }
 
+        if(!isMyServiceRunning(GpsService.class)) {
+            Intent intent = new Intent(getApplicationContext(), GpsService.class);
+            startService(intent);
+            Log.d("GpsService","GpsService is first running");
+        }
+        else{
+            Log.d("GpsService","GpsService is already running");
+        }
     }
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);

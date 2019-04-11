@@ -3,7 +3,8 @@
     package="com.example.anhong_gyeong.fcm_android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <application
         android:name=".MyApplication"
         android:allowBackup="true"
@@ -42,6 +43,10 @@
             android:exported="true" />
         <service
             android:name=".SocketService"
+            android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name=".GpsService"
             android:enabled="true"
             android:exported="true"></service>
     </application>

@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
@@ -65,8 +66,6 @@ public class MainActivity extends AppCompatActivity {
 
     // 위도, 경도
     double longitude, latitude;
-    LocationManager Im;
-    Location location;
     ImageView imageArrow;
 
     short mDegree;
@@ -85,19 +84,46 @@ public class MainActivity extends AppCompatActivity {
         ////////////////
         imageArrow = findViewById(R.id.image_arrow);
 
-        if(Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(getApplicationContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+        /**
+         *
+         */
+//        Im = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//        // 권한이 없는 경우 권한부터 생성.
+//        if ( Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
+//            ActivityCompat.requestPermissions( MainActivity.this, new String[] {  android.Manifest.permission.ACCESS_FINE_LOCATION  }, 0 );
+//        }
+//        // 권한이 있는 경우
+//        else{
+//            Location location = Im.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//            longitude = location.getLongitude();
+//            latitude = location.getLatitude();
+//
+//            Im.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+//                    10000,
+//                    1,
+//                    gpsLocationListener);
+//            Im.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+//                    10000,
+//                    1,
+//                    gpsLocationListener);
+//        }
 
-            Im = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            location = Im.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        }
-        else {
-            Im = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            location = Im.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            //Log.d("Location",location.toString());
-        }
+        /**
+         *
+         */
+//        if(Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(getApplicationContext(),
+//                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+//                    Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+//
+//            Im = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//            location = Im.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//        }
+//        else {
+//            Im = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//            location = Im.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//            //Log.d("Location",location.toString());
+//        }
 
         ////////////////////
         myCompositeDisposable = new CompositeDisposable();
@@ -114,7 +140,15 @@ public class MainActivity extends AppCompatActivity {
                 .fulfillRequirements(this,
                         () -> {
                             Log.d("app", "requirements fulfilled");
-                            application.enableService();
+                            // 권한 요청을 모두 확인 받은 후에 service 시작
+                            // 서비스 종료 후 다시 시작되는 경우에 이미 권한은 허용돼있음. 따라서 else문을 통해 서비스 다시 시작.
+                            if ( Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
+                                ActivityCompat.requestPermissions( MainActivity.this, new String[] {  android.Manifest.permission.ACCESS_FINE_LOCATION  }, 0 );
+                                application.enableService();
+                            }
+                            else{
+                                application.enableService();
+                            }
                             return null;
                         },
                         requirements -> {
@@ -133,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
         buttonGps.setOnClickListener(v -> {
             SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
             String refreshedToken = prefs.getString("RefreshedToken", "");
-            postGpsData(refreshedToken);
+            //postGpsData(refreshedToken);
         });
         /**
          * 자동화 해놨으므로 지워줘도 됨.
@@ -160,10 +194,31 @@ public class MainActivity extends AppCompatActivity {
         ReceiveFcm();
         // beacon 범위내에 들어올 때 beaconId list에 저장.
         SaveBeaconId();
-        // 권한 설정 부분 + 비콘 모니터링 시작 부분
 
+        SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
+        String refreshedToken = prefs.getString("RefreshedToken", "");
+        postGpsData(refreshedToken);
 
     }
+//    final LocationListener gpsLocationListener = new LocationListener() {
+//        public void onLocationChanged(Location location) {
+//            longitude = location.getLongitude();
+//            latitude = location.getLatitude();
+//
+//        }
+//
+//        public void onStatusChanged(String provider, int status, Bundle extras) {
+//        }
+//
+//        public void onProviderEnabled(String provider) {
+//        }
+//
+//        public void onProviderDisabled(String provider) {
+//        }
+//    };
+
+
+
     public void initRetrofit(){
         retrofit = new Retrofit.Builder()
                 .baseUrl("http://192.168.43.82:8080/")
@@ -256,30 +311,31 @@ public class MainActivity extends AppCompatActivity {
                 .subscribeWith(new DisposableObserver<Map<String, String>>() {
                     @Override
                     public void onNext(Map<String, String> stringStringMap) {
-                        /**
-                         * 여기서 gps 비교해서 방향 출력해주는거 추가.
-                         */
+
                         String temp = stringStringMap.get("gps");
                         String[] gpsArray = temp.split("\\,");
-                        // 상대방의 gps와 내 위치를 비교하여 각도 설정. 지금은 서울역으로 고정.
-                        mDegree = getDirection(Double.parseDouble(gpsArray[0]), Double.parseDouble(gpsArray[1]), 37.554648, 126.972559);
+                        /**
+                         * 앞 2개 : 현재 내 gps
+                         * 뒤 2개 : FCM messgage로 전달 받은 상대방 gps
+                         * 방향을 구함.
+                         */
 
-                        // locationA = 현재위치
+                        double otherLatitude = Double.parseDouble(gpsArray[0]);
+                        double otherLongitude = Double.parseDouble(gpsArray[1]);
+                        mDegree = getDirection(latitude, longitude, otherLatitude, otherLongitude);
+
+                        // 거리 비교를 위해 현재 gps로 location 생성
                         Location locationA = new Location("point A");
-//                        locationA.setLatitude(latitude);
-//                        locationA.setLongitude(longitude);
-                        //locationA와 차이가 뭐지.
-                        locationA.setLatitude(location.getLatitude());
-                        locationA.setLongitude(location.getLatitude());
+                        locationA.setLatitude(latitude);
+                        locationA.setLongitude(longitude);
 
 
-                        // locationB = 서울역 위치
+                        // locationB = 메시지 보낸 상대방
                         Location locationB = new Location("point B");
-                        locationB.setLatitude(37.554648);
-                        locationB.setLongitude(126.972559);
+                        locationB.setLatitude(otherLatitude);
+                        locationB.setLongitude(otherLongitude);
 
                         // 거리구하기
-                        // 그냥 location.distanceTo는 안되나?
                         double distance = locationA.distanceTo(locationB);
 
                         // 화살표 돌리는 코드
@@ -308,43 +364,99 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * gps logging해주는 함수. Service로 만들어서 빼줄 것.
+     * Service에서 정해진 초 or 거리의 변화가 생길시에 location changed가 call됨. 여기서 onNext로 location 객체 발행
+     * 이 함수에서는 발행된 location객체에서 data를 파싱하여 서버로 post.
      */
     public void postGpsData(String userId) {
         //body에 넣을 데이터
+        myCompositeDisposable.add(GpsService.getGpsObservable()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribeWith(new DisposableObserver<Location>() {
+                            @Override
+                            public void onNext(Location location) {
+                                Log.d("postGpsData","postGpsData_first onNext call"+location.getLatitude() +","+ location.getLongitude());
+                                // ReceiveFcm함수에서도 longitude, latitude를 사용하므로 데이터 변화가 있을시마다 저장.
+                                latitude = location.getLatitude();
+                                longitude = location.getLongitude();
+                                String gps_latitude = Double.toString(latitude);
+                                String gps_longitude = Double.toString(longitude);
+                                String gps = gps_latitude+","+gps_longitude;
 
-        String gps_longitude = Double.toString(location.getLongitude());
-        String gps_latitude = Double.toString(location.getLatitude());
-        String gps = gps_latitude+","+gps_longitude;
+                                JSONObject paramObject = new JSONObject();
+                                try {
+                                    paramObject.put("user_id", userId);
+                                    paramObject.put("gps", gps);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
 
-        JSONObject paramObject = new JSONObject();
-        try {
-            paramObject.put("user_id", userId);
-            paramObject.put("gps", gps);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+                                myCompositeDisposable.add(service.postGps(paramObject.toString())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribeWith(new DisposableObserver<RetrofitRepo>() {
+                                            @Override
+                                            public void onNext(RetrofitRepo retrofitRepo) {
 
-        myCompositeDisposable.add(service.postGps(paramObject.toString())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribeWith(new DisposableObserver<RetrofitRepo>() {
-                    @Override
-                    public void onNext(RetrofitRepo retrofitRepo) {
+                                            }
 
-                    }
+                                            @Override
+                                            public void onError(Throwable e) {
+                                                e.printStackTrace();
+                                            }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        e.printStackTrace();
-                    }
+                                            @Override
+                                            public void onComplete() {
+                                                Log.d("postGps","Completed postGps");
+                                            }
+                                        })
+                                );
+                            }
 
-                    @Override
-                    public void onComplete() {
-                        Log.d("postGps","Completed postGps");
-                    }
-                })
+                            @Override
+                            public void onError(Throwable e) {
+
+                            }
+
+                            @Override
+                            public void onComplete() {
+
+                            }
+                        })
         );
+        ////
+//        String gps_longitude = Double.toString(longitude);
+//        String gps_latitude = Double.toString(latitude);
+//        String gps = gps_latitude+","+gps_longitude;
+//
+//        JSONObject paramObject = new JSONObject();
+//        try {
+//            paramObject.put("user_id", userId);
+//            paramObject.put("gps", gps);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//
+//        myCompositeDisposable.add(service.postGps(paramObject.toString())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribeOn(Schedulers.io())
+//                .subscribeWith(new DisposableObserver<RetrofitRepo>() {
+//                    @Override
+//                    public void onNext(RetrofitRepo retrofitRepo) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                    @Override
+//                    public void onComplete() {
+//                        Log.d("postGps","Completed postGps");
+//                    }
+//                })
+//        );
     }
     /**
      * FCM message를 전송해주는 함수. 비콘 ID를 list로 관리 + 서비스에서 스코어링 임계치 넘은 event가 발생시에 PostFcmData실행. 그냥 subscribe(PostFcmData())해줘도 될 듯.
