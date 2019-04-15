@@ -37,3 +37,7 @@
   sudo ./AdafruitDHT.py 11 2 (Temperature sensor:11, gpoi port num:2)
 
 
+# How to get acceleration value
+1. git clone https://github.com/adafruit/Adafruit_Python_ADXL345
+
+2. Port - raspberry pi 1:3.3v 3. SDA 5. SCL 6. GND 
