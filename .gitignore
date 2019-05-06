@@ -1,2 +1,2 @@
-Node/node_modules
-FCM_ANDROID/.idea
+./.idea/
+./.DS_Store
