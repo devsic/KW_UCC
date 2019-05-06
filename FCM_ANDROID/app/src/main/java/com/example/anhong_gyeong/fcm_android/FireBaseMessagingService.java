@@ -14,39 +14,56 @@ import android.util.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.Map;
 
+
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 
 public class FireBaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
+    /**
+     * data : Observable. data 발행. PublishSubject는 Observable을 상속받음.
+     * getObservable : Acticity측에서 Obesrvable 참조 위한 getter.
+     * Map<String,String> : Server에서 body에 담아서 보내준 FCM message. gps와 score 정보가 담겨있음.
+     * 원래 이렇게 static으로 하여 구현하는가? issue는 없는가? // MainActivity에서 Observable 객체 참조하려고 이렇게 사용했음.
+     */
+    static PublishSubject<Map<String,String>> data = PublishSubject.create();
 
-
-
+    public static Observable<Map<String,String>> getObservable(){
+        return data;
+    }
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         Log.d(TAG, "From: " + remoteMessage.getFrom());
+        // getData에 내가 받은 data가 들어있음.
+        // server측에서 body에 data라는 이름으로 보내주기 때문.
+        // Key,value형태.
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             if (true) {
-
+                // Message로 받아온 Data에 대한 처리.
+                // remoteMessage.getData() 발행.
+                data.onNext(remoteMessage.getData());
             } else {
                 handleNow();
             }
         }
-
+        // Firebase server측에서 notification으로 보내주는 부분.
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
             sendNotification(remoteMessage.getNotification().getBody());
         }
     }
-
     private void handleNow() {
         Log.d(TAG, "Short lived task is done.");
     }
 
 
-
+    // 상단 notification message 출력해주는 부분.
     private void sendNotification(String messageBody) {
+        Log.d(TAG, "Send Notification");
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,

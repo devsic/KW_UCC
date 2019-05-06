@@ -60,7 +60,7 @@ router.post('/fcm',function(req,res){
                 //return err;
                 
             }
-        
+            console.log("target_token : "+target_token_id);
             console.log('Push메시지가 발송되었습니다.');
             console.log(output);
             //return output;
