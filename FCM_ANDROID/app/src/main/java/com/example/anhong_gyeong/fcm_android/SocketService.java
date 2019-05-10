@@ -47,6 +47,7 @@ public class SocketService extends Service implements Runnable{
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
+
     @Override
     public void run() {
         try {

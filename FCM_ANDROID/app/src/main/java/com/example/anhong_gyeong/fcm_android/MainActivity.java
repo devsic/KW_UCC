@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -17,6 +18,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -57,13 +60,13 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
  */
 public class MainActivity extends AppCompatActivity {
     Button buttonGps,buttonFcm;
-    TextView textViewScore,textViewDistance;
+    TextView textViewScore,textViewDistance,textViewSpeed,textViewTop;
     Retrofit retrofit;
     RetrofitService service;
     CompositeDisposable myCompositeDisposable;
     ArrayList<String> beaconList;
     String bId;
-
+    MediaPlayer player;
     // 위도, 경도
     double longitude, latitude;
     ImageView imageArrow;
@@ -81,9 +84,13 @@ public class MainActivity extends AppCompatActivity {
 
         textViewScore = findViewById(R.id.textview_score);
         textViewDistance = findViewById(R.id.textview_distance);
+        textViewSpeed = findViewById(R.id.textview_speed);
+        textViewTop = findViewById(R.id.textview_top);
+
         ////////////////
         imageArrow = findViewById(R.id.image_arrow);
 
+        player = MediaPlayer.create(this,R.raw.beep);
         /**
          *
          */
@@ -165,9 +172,14 @@ public class MainActivity extends AppCompatActivity {
 
         // gps logging. service로 뺄 것.
         buttonGps.setOnClickListener(v -> {
-            SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
-            String refreshedToken = prefs.getString("RefreshedToken", "");
+            /*SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
+            String refreshedToken = prefs.getString("RefreshedToken", "");*/
             //postGpsData(refreshedToken);
+            player.start();
+            textViewTop.setVisibility(View.VISIBLE);
+            Animation anim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.alpha);
+            textViewTop.startAnimation(anim);
+
         });
         /**
          * 자동화 해놨으므로 지워줘도 됨.
@@ -182,8 +194,9 @@ public class MainActivity extends AppCompatActivity {
             /**
              * PostFcmData는 버튼 클릭이 아닌, ReceiveFlag()함수에서 call해줄것임. 이건 데모용.
              * "Score"에는 스코어링한 data가 들어갈 것.
+             * 지금은 비콘이 3개라서 i%3해준것.
              */
-            for(int i=0; i<beaconList.size()*5; i++) {
+            for(int i=0; i<beaconList.size()*3; i++) {
                   PostFcmData(beaconList.get(i%3),refreshedToken,"Score");
             }
             //textViewFcm.setText(refreshedToken);
@@ -366,7 +379,9 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Service에서 정해진 초 or 거리의 변화가 생길시에 location changed가 call됨. 여기서 onNext로 location 객체 발행
      * 이 함수에서는 발행된 location객체에서 data를 파싱하여 서버로 post.
+     * 내 token id를 가지고 gps 저장.
      */
+
     public void postGpsData(String userId) {
         //body에 넣을 데이터
         myCompositeDisposable.add(GpsService.getGpsObservable()
@@ -376,12 +391,18 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onNext(Location location) {
                                 Log.d("postGpsData","postGpsData_first onNext call"+location.getLatitude() +","+ location.getLongitude());
+
+                                String tempSpeed = String.valueOf(((location.getSpeed()*3600)/1000));
+                                Log.d("getSpeed()",tempSpeed );
+                                textViewSpeed.setText(tempSpeed);
+
                                 // ReceiveFcm함수에서도 longitude, latitude를 사용하므로 데이터 변화가 있을시마다 저장.
                                 latitude = location.getLatitude();
                                 longitude = location.getLongitude();
                                 String gps_latitude = Double.toString(latitude);
                                 String gps_longitude = Double.toString(longitude);
                                 String gps = gps_latitude+","+gps_longitude;
+
 
                                 JSONObject paramObject = new JSONObject();
                                 try {
@@ -460,6 +481,8 @@ public class MainActivity extends AppCompatActivity {
     }
     /**
      * FCM message를 전송해주는 함수. 비콘 ID를 list로 관리 + 서비스에서 스코어링 임계치 넘은 event가 발생시에 PostFcmData실행. 그냥 subscribe(PostFcmData())해줘도 될 듯.
+     * beaconId : 상대방 beaconId. 이를 통해 서버에 저장된 target token id를 접근
+     * user_id : 내 gps를 얻기 위한 token id.
      */
     public void PostFcmData(String beaconId,String userId,String score) {
         // body에 넣을 데이터

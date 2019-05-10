@@ -4,17 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:background="#222222">
 
     <TextView android:id="@+id/textview_top" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="주의 해야 할 차량"
-        android:textSize="18dp"
+        android:text="졸음 감지 차량!!"
+        android:textSize="24sp"
         android:textStyle="bold"
+        android:textColor="#FF00"
+        android:visibility="invisible"
+
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
 
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="40dp"
         />
 
     <ImageView
@@ -23,6 +27,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textview_top"
+
+        android:layout_marginTop="40dp"
         />
 
     <TextView
@@ -43,6 +49,7 @@
         android:id="@+id/textview_subdistance" android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="거리에"
         android:textSize="20dp"
+        android:textColor="#FFFF"
 
         app:layout_constraintStart_toEndOf="@id/textview_distance"
         app:layout_constraintTop_toTopOf="@id/textview_distance"
@@ -56,10 +63,10 @@
         android:id="@+id/textview_subscore" android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="운전점수"
         android:textSize="18dp"
+        android:textColor="#FFFF"
 
         app:layout_constraintStart_toStartOf="@id/image_arrow"
         app:layout_constraintTop_toBottomOf="@id/textview_distance"
-
         android:layout_marginTop="20dp"
 
         />
@@ -74,14 +81,15 @@
         app:layout_constraintTop_toTopOf="@id/textview_subscore"
         app:layout_constraintBottom_toBottomOf="@id/textview_subscore"
         app:layout_constraintStart_toEndOf="@id/textview_subscore"
-
         android:layout_marginLeft="10dp"
         />
 
     <TextView
+        android:id="@+id/textview_driving"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="차량 주행중"
         android:textSize="18dp"
+        android:textColor="#FFFF"
 
         app:layout_constraintEnd_toEndOf="@id/image_arrow"
         app:layout_constraintTop_toTopOf="@id/textview_subscore"
@@ -95,9 +103,9 @@
         android:id="@+id/button_fcm" android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:background="@drawable/blue_rec"
         android:text="FCM 전송"
+
         app:layout_constraintStart_toStartOf="@id/image_arrow"
         app:layout_constraintTop_toBottomOf="@id/textview_subscore"
-
         app:layout_constraintEnd_toStartOf="@id/button_score"
 
         android:layout_marginTop="100dp"
@@ -110,9 +118,9 @@
 
         app:layout_constraintStart_toEndOf="@id/button_fcm"
         app:layout_constraintEnd_toStartOf="@id/button_gps"
-
         app:layout_constraintTop_toTopOf="@id/button_fcm"
         app:layout_constraintBottom_toBottomOf="@id/button_fcm"
+
         android:layout_marginLeft="20dp"
         />
 
@@ -127,6 +135,16 @@
         app:layout_constraintBottom_toBottomOf="@id/button_fcm"
 
         android:layout_marginLeft="20dp"
+        />
+    <TextView
+        android:id="@+id/textview_speed" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="속도"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FFFF"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         />
 
 </android.support.constraint.ConstraintLayout>

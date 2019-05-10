@@ -20,13 +20,14 @@ import com.estimote.proximity_sdk.api.ProximityZoneContext;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 
+// https://m.blog.naver.com/PostView.nhn?blogId=netrance&logNo=110174802599&proxyReferer=https%3A%2F%2Fwww.google.com%2F
 public class GpsService extends Service implements Runnable{
     double longitude,latitude;
     LocationManager Im;
     Thread gpsThread;
     private static final String TAG = "BOOMBOOMTESTGPS";
     private LocationManager mLocationManager = null;
-    private static final int LOCATION_INTERVAL = 10000;
+    private static final int LOCATION_INTERVAL = 5000;
     private static final float LOCATION_DISTANCE = 10f;
 
     static PublishSubject<Location> gps_data = PublishSubject.create();
@@ -45,6 +46,8 @@ public class GpsService extends Service implements Runnable{
         public LocationListener(String provider) {
             mLastLocation = new Location(provider);
         }
+        // 위치가 변할 때마다 호출됨.
+        // 최신 위치가 location parameter로 전달.
         @Override
         public void onLocationChanged(Location location) {
             //mLastLocation.set(location);// 여기서 그냥 postGps해주면 될듯.
@@ -94,6 +97,7 @@ public class GpsService extends Service implements Runnable{
         initializeLocationManager();
 
         // LocationMager에 대해 listener 등록.
+        // network, gps에 대해 각각 리스너를 위에서 만들어줬고 그에 대해 동작 수행.
         try {
             mLocationManager.requestLocationUpdates(
                     LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
