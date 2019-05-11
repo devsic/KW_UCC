@@ -39,6 +39,24 @@ public class MyApplication extends Application {
             Log.d("SocketService","SocketService is already running");
         }
 
+        if(!isMyServiceRunning(SensorSocketService.class)) {
+            Intent intent = new Intent(getApplicationContext(), SensorSocketService.class);
+            startService(intent);
+            Log.d("SensorSocketService","SensorSocketService is first running");
+        }
+        else{
+            Log.d("SensorSocketService","SensorSocketService is already running");
+        }
+
+        if(!isMyServiceRunning(AccelerService.class)) {
+            Intent intent = new Intent(getApplicationContext(), AccelerService.class);
+            startService(intent);
+            Log.d("AccelerService","AccelerService is first running");
+        }
+        else{
+            Log.d("AccelerService","AccelerService is already running");
+        }
+
         if(!isMyServiceRunning(GpsService.class)) {
             Intent intent = new Intent(getApplicationContext(), GpsService.class);
             startService(intent);

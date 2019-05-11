@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -60,7 +62,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
  */
 public class MainActivity extends AppCompatActivity {
     Button buttonGps,buttonFcm;
-    TextView textViewScore,textViewDistance,textViewSpeed,textViewTop;
+    TextView textViewScore,textViewDistance,textViewTop;
     Retrofit retrofit;
     RetrofitService service;
     CompositeDisposable myCompositeDisposable;
@@ -72,7 +74,10 @@ public class MainActivity extends AppCompatActivity {
     ImageView imageArrow;
 
     short mDegree;
-
+    double lAccX,lAccY,lAccZ;
+    ///
+    TextView textViewSpeed,textViewGps,textViewAccel;
+    ///
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,55 +89,17 @@ public class MainActivity extends AppCompatActivity {
 
         textViewScore = findViewById(R.id.textview_score);
         textViewDistance = findViewById(R.id.textview_distance);
-        textViewSpeed = findViewById(R.id.textview_speed);
         textViewTop = findViewById(R.id.textview_top);
 
+        //////////////
+        textViewSpeed = findViewById(R.id.textview_speed);
+        textViewGps = findViewById(R.id.textview_temp_gps);
+        textViewAccel = findViewById(R.id.textview_accel);
         ////////////////
         imageArrow = findViewById(R.id.image_arrow);
 
         player = MediaPlayer.create(this,R.raw.beep);
-        /**
-         *
-         */
-//        Im = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//        // 권한이 없는 경우 권한부터 생성.
-//        if ( Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
-//            ActivityCompat.requestPermissions( MainActivity.this, new String[] {  android.Manifest.permission.ACCESS_FINE_LOCATION  }, 0 );
-//        }
-//        // 권한이 있는 경우
-//        else{
-//            Location location = Im.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//            longitude = location.getLongitude();
-//            latitude = location.getLatitude();
-//
-//            Im.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-//                    10000,
-//                    1,
-//                    gpsLocationListener);
-//            Im.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-//                    10000,
-//                    1,
-//                    gpsLocationListener);
-//        }
 
-        /**
-         *
-         */
-//        if(Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(getApplicationContext(),
-//                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-//                    Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-//
-//            Im = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//            location = Im.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//        }
-//        else {
-//            Im = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//            location = Im.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//            //Log.d("Location",location.toString());
-//        }
-
-        ////////////////////
         myCompositeDisposable = new CompositeDisposable();
         beaconList = new ArrayList<>();
 
@@ -199,10 +166,13 @@ public class MainActivity extends AppCompatActivity {
             for(int i=0; i<beaconList.size()*3; i++) {
                   PostFcmData(beaconList.get(i%3),refreshedToken,"Score");
             }
+            //list.clear() 해줘야 함.
             //textViewFcm.setText(refreshedToken);
             //ReceiveFlag();
         });
-        ReceiveFlag();
+        ReceiveSleepFlag();
+        ReceiveSensorData();
+        ReceiveAccelerometer();
         // fcm Message 받았을 때 main에서의 동작 구현.
         ReceiveFcm();
         // beacon 범위내에 들어올 때 beaconId list에 저장.
@@ -213,28 +183,14 @@ public class MainActivity extends AppCompatActivity {
         postGpsData(refreshedToken);
 
     }
-//    final LocationListener gpsLocationListener = new LocationListener() {
-//        public void onLocationChanged(Location location) {
-//            longitude = location.getLongitude();
-//            latitude = location.getLatitude();
-//
-//        }
-//
-//        public void onStatusChanged(String provider, int status, Bundle extras) {
-//        }
-//
-//        public void onProviderEnabled(String provider) {
-//        }
-//
-//        public void onProviderDisabled(String provider) {
-//        }
-//    };
-
-
 
     public void initRetrofit(){
         retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.43.82:8080/")
+                //10.20.24.87
+                //.baseUrl("http://192.168.43.82:8080/")
+                //192.168.200.168
+                //.baseUrl("http://10.20.24.87:8080/")
+                .baseUrl("http://192.168.200.122:8080/")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
@@ -242,7 +198,46 @@ public class MainActivity extends AppCompatActivity {
         service = retrofit.create(RetrofitService.class);
 
     }
-    public void ReceiveFlag(){
+    public void ReceiveAccelerometer(){
+        myCompositeDisposable.add(AccelerService.getAccelerObservable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribeWith(new DisposableObserver<SensorEvent>() {
+                    @Override
+                    public void onNext(SensorEvent sensorEvent) {
+                        /*
+                        textViewAccel.setText(sensorEvent.toString());
+                        Log.d("Accelerometer",sensorEvent.toString());
+                        */
+                        lAccX = sensorEvent.values[0];
+                        lAccY = sensorEvent.values[1];
+                        lAccZ = sensorEvent.values[2];
+
+                        lAccX = Math.round(lAccX*100)/100.0;
+                        lAccY = Math.round(lAccY*100)/100.0;
+                        lAccZ = Math.round(lAccZ*100)/100.0;
+
+                        double accel = Math.sqrt((lAccX * lAccX) + (lAccY * lAccY) + (lAccZ * lAccZ));
+                        accel = Math.round(accel*100)/100.0;
+                        textViewAccel.setText(lAccX+" "+lAccY+" "+lAccZ);
+                        Log.d("Accelerometer",String.valueOf(accel));
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                })
+
+        );
+    }
+    public void ReceiveSleepFlag(){
         myCompositeDisposable.add(SocketService.getSocketObservable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -259,7 +254,41 @@ public class MainActivity extends AppCompatActivity {
                         for(int i=0; i<beaconList.size(); i++) {
                             PostFcmData(beaconList.get(i),refreshedToken,s);
                         }
+                        //list.clear() 해줘야 함.
 
+                        //textViewFcm.setText(refreshedToken);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                })
+        );
+    }
+    public void ReceiveSensorData(){
+        myCompositeDisposable.add(SensorSocketService.getSensorSocketObservable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribeWith(new DisposableObserver<String>() {
+                    /**
+                     * @param s : socket으로 받은 data. 실제 구현시에는 받자마자 발행이 아닌, 데이터 처리 후 임게치 초과시에 데이터 발행.
+                     *          이것 외에도, 내 스코어를 표시하기 위한 데이터 발행이 추가되어야 할듯.
+                     *          위 2개는 결국 스코어링을 어떻게 하냐에 따라 달라질 듯
+                     */
+                    @Override
+                    public void onNext(String s) {
+                        /*SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
+                        String refreshedToken = prefs.getString("RefreshedToken", "");
+                        for(int i=0; i<beaconList.size(); i++) {
+                            PostFcmData(beaconList.get(i),refreshedToken,s);
+                        }*/
+                        Log.d("SensorSocket_Main","Received Sensor data in MainActivity.");
 
                         //textViewFcm.setText(refreshedToken);
                     }
@@ -402,7 +431,8 @@ public class MainActivity extends AppCompatActivity {
                                 String gps_latitude = Double.toString(latitude);
                                 String gps_longitude = Double.toString(longitude);
                                 String gps = gps_latitude+","+gps_longitude;
-
+                                //////////////
+                                textViewGps.setText(gps);
 
                                 JSONObject paramObject = new JSONObject();
                                 try {

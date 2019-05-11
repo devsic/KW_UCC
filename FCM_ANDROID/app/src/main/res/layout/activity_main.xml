@@ -7,6 +7,46 @@
     tools:context=".MainActivity"
     android:background="#222222">
 
+    <TextView
+        android:id="@+id/textview_speed" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="속도"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FFFF"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+    <TextView
+        android:id="@+id/textview_temp_gps" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="gps"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FFFF"
+
+        app:layout_constraintStart_toStartOf="@id/textview_speed"
+        app:layout_constraintTop_toBottomOf="@id/textview_speed"
+        app:layout_constraintEnd_toEndOf="@id/textview_speed"
+        />
+    <TextView
+        android:id="@+id/textview_accel" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="가속도"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FFFF"
+
+        app:layout_constraintStart_toStartOf="@id/textview_speed"
+        app:layout_constraintEnd_toEndOf="@id/textview_speed"
+        app:layout_constraintTop_toBottomOf="@id/textview_temp_gps"
+        />
+
+
+
+
+
+
+
     <TextView android:id="@+id/textview_top" android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="졸음 감지 차량!!"
         android:textSize="24sp"
@@ -136,15 +176,6 @@
 
         android:layout_marginLeft="20dp"
         />
-    <TextView
-        android:id="@+id/textview_speed" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="속도"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="#FFFF"
 
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        />
 
 </android.support.constraint.ConstraintLayout>
