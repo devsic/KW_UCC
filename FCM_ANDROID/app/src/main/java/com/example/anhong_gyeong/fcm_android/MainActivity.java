@@ -26,7 +26,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.estimote.mustard.rx_goodness.rx_requirements_wizard.Requirement;
 import com.estimote.mustard.rx_goodness.rx_requirements_wizard.RequirementsWizardFactory;
 import com.estimote.proximity_sdk.api.ProximityZoneContext;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -34,22 +33,13 @@ import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
-import kotlin.jvm.functions.Function1;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
@@ -172,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
         });
         ReceiveSleepFlag();
         ReceiveSensorData();
-        ReceiveAccelerometer();
+        //ReceiveAccelerometer();
         // fcm Message 받았을 때 main에서의 동작 구현.
         ReceiveFcm();
         // beacon 범위내에 들어올 때 beaconId list에 저장.
@@ -197,18 +187,17 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         service = retrofit.create(RetrofitService.class);
 
-    }
+    }/*
     public void ReceiveAccelerometer(){
         myCompositeDisposable.add(AccelerService.getAccelerObservable()
-                .observeOn(AndroidSchedulers.mainThread())
+                .observeOn(Schedulers.computation())
                 .subscribeOn(Schedulers.io())
                 .subscribeWith(new DisposableObserver<SensorEvent>() {
                     @Override
                     public void onNext(SensorEvent sensorEvent) {
-                        /*
-                        textViewAccel.setText(sensorEvent.toString());
-                        Log.d("Accelerometer",sensorEvent.toString());
-                        */
+
+                        //textViewAccel.setText(sensorEvent.toString());
+
                         lAccX = sensorEvent.values[0];
                         lAccY = sensorEvent.values[1];
                         lAccZ = sensorEvent.values[2];
@@ -219,8 +208,9 @@ public class MainActivity extends AppCompatActivity {
 
                         double accel = Math.sqrt((lAccX * lAccX) + (lAccY * lAccY) + (lAccZ * lAccZ));
                         accel = Math.round(accel*100)/100.0;
-                        textViewAccel.setText(lAccX+" "+lAccY+" "+lAccZ);
-                        Log.d("Accelerometer",String.valueOf(accel));
+                        //textViewAccel.setText(lAccX+" "+lAccY+" "+lAccZ);
+                        Log.d("MainAccelerometer",String.valueOf(accel));
+                        Log.d("MainAccelerometer",Thread.currentThread().getName());
 
                     }
 
@@ -236,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
                 })
 
         );
-    }
+    }*/
     public void ReceiveSleepFlag(){
         myCompositeDisposable.add(SocketService.getSocketObservable()
                 .observeOn(AndroidSchedulers.mainThread())

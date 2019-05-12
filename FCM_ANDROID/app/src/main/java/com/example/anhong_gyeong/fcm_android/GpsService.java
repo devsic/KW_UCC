@@ -50,10 +50,7 @@ public class GpsService extends Service implements Runnable{
         // 최신 위치가 location parameter로 전달.
         @Override
         public void onLocationChanged(Location location) {
-            //mLastLocation.set(location);// 여기서 그냥 postGps해주면 될듯.
-            Log.d("GPSGPSGPS",Thread.currentThread().getName());
             gps_data.onNext(location);
-            Log.d(TAG,"onLocationChanged call"+location.getLatitude() +","+ location.getLongitude());
         }
 
         @Override
