@@ -2,6 +2,7 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/backGroundLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
@@ -13,6 +14,7 @@
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="#FFFF"
+        android:visibility="invisible"
 
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -24,6 +26,7 @@
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="#FFFF"
+        android:visibility="invisible"
 
         app:layout_constraintStart_toStartOf="@id/textview_speed"
         app:layout_constraintTop_toBottomOf="@id/textview_speed"
@@ -35,16 +38,12 @@
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="#FFFF"
+        android:visibility="invisible"
 
         app:layout_constraintStart_toStartOf="@id/textview_speed"
         app:layout_constraintEnd_toEndOf="@id/textview_speed"
         app:layout_constraintTop_toBottomOf="@id/textview_temp_gps"
         />
-
-
-
-
-
 
 
     <TextView android:id="@+id/textview_top" android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -77,6 +76,7 @@
         android:textColor="#33F"
         android:textSize="24dp"
         android:textStyle="bold"
+        android:visibility="invisible"
 
         app:layout_constraintStart_toStartOf="@id/image_arrow"
         app:layout_constraintTop_toBottomOf="@id/image_arrow"
@@ -90,6 +90,7 @@
         android:text="거리에"
         android:textSize="20dp"
         android:textColor="#FFFF"
+        android:visibility="invisible"
 
         app:layout_constraintStart_toEndOf="@id/textview_distance"
         app:layout_constraintTop_toTopOf="@id/textview_distance"
@@ -101,42 +102,16 @@
 
     <TextView
         android:id="@+id/textview_subscore" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="운전점수"
-        android:textSize="18dp"
-        android:textColor="#FFFF"
+        android:text="위험 차량 감지!!"
+        android:textSize="24dp"
+        android:textColor="#FF00"
+        android:visibility="invisible"
 
         app:layout_constraintStart_toStartOf="@id/image_arrow"
-        app:layout_constraintTop_toBottomOf="@id/textview_distance"
-        android:layout_marginTop="20dp"
-
-        />
-
-    <TextView
-        android:id="@+id/textview_score" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="30점"
-        android:textSize="24dp"
-        android:textStyle="bold"
-        android:textColor="#FF4400"
-
-        app:layout_constraintTop_toTopOf="@id/textview_subscore"
-        app:layout_constraintBottom_toBottomOf="@id/textview_subscore"
-        app:layout_constraintStart_toEndOf="@id/textview_subscore"
-        android:layout_marginLeft="10dp"
-        />
-
-    <TextView
-        android:id="@+id/textview_driving"
-        android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="차량 주행중"
-        android:textSize="18dp"
-        android:textColor="#FFFF"
-
         app:layout_constraintEnd_toEndOf="@id/image_arrow"
-        app:layout_constraintTop_toTopOf="@id/textview_subscore"
-        app:layout_constraintBottom_toBottomOf="@id/textview_subscore"
-        app:layout_constraintStart_toEndOf="@id/textview_score"
+        app:layout_constraintTop_toBottomOf="@id/textview_distance"
 
-        android:layout_marginLeft="30dp"
+        android:layout_marginTop="20dp"
         />
 
     <Button
@@ -176,6 +151,17 @@
 
         android:layout_marginLeft="20dp"
         />
+    <TextView
+        android:id="@+id/textview_demo_score" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Score"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FFFF"
 
+        app:layout_constraintStart_toStartOf="@id/button_score"
+        app:layout_constraintEnd_toEndOf="@id/button_score"
+        app:layout_constraintTop_toBottomOf="@id/button_score"
 
+        android:layout_marginTop="50dp"
+        />
 </android.support.constraint.ConstraintLayout>

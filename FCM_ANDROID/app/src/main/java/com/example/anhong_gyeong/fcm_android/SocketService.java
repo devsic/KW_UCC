@@ -34,6 +34,7 @@ public class SocketService extends Service implements Runnable{
     public void onCreate() {
         super.onCreate();
         SocketThread = new Thread(this);
+
     }
 
     @Override
@@ -55,6 +56,11 @@ public class SocketService extends Service implements Runnable{
             Socket socket= null;
             Log.d("Green","success socket");
 
+            // 여기 while(1)로 감싸주기.
+            // accept시에 thread 새로 생성 및 Runnable 등록. 이렇게 하면 센서도 같이 받을 수 있을듯.
+            // 하지만, 센서와 sleep을 표시할 flag를 client에서 추가로 전송 해줘야 할 듯.
+
+            // socket이 끊길시에 처리는 client에서 해줘야 한다고 함. https://stackoverflow.com/questions/151590/how-to-detect-a-remote-side-socket-close
             socket = server.accept();
             Log.d("Green","success accept");
             while(istrue) {
@@ -75,4 +81,5 @@ public class SocketService extends Service implements Runnable{
             e.printStackTrace();
         }
     }
+
 }

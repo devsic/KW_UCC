@@ -1,4 +1,5 @@
-package com.example.anhong_gyeong.fcm_android;
+/*
+package com.example.anhong_gyeong.fcm_android.Accel;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -35,3 +36,4 @@ public class Accelerometer implements SensorEventListener {
 
     }
 }
+*/

@@ -27,8 +27,8 @@ public class GpsService extends Service implements Runnable{
     Thread gpsThread;
     private static final String TAG = "BOOMBOOMTESTGPS";
     private LocationManager mLocationManager = null;
-    private static final int LOCATION_INTERVAL = 5000;
-    private static final float LOCATION_DISTANCE = 10f;
+    private static final int LOCATION_INTERVAL = 3000;
+    private static final float LOCATION_DISTANCE = 3f;
 
     static PublishSubject<Location> gps_data = PublishSubject.create();
 
@@ -50,6 +50,7 @@ public class GpsService extends Service implements Runnable{
         // 최신 위치가 location parameter로 전달.
         @Override
         public void onLocationChanged(Location location) {
+
             gps_data.onNext(location);
         }
 
@@ -100,6 +101,7 @@ public class GpsService extends Service implements Runnable{
             mLocationManager.requestLocationUpdates(
                     LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
                     mLocationListeners[1]);
+            Log.d("GPSCALEED","GPS THREAD IS CALLED");
         } catch (java.lang.SecurityException ex) {
             Log.i(TAG, "fail to request location update, ignore", ex);
         } catch (IllegalArgumentException ex) {

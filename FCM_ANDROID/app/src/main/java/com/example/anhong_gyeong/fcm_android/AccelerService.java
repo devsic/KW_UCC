@@ -13,12 +13,11 @@ import android.util.Log;
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.subjects.PublishSubject;
 
-public class AccelerService extends Service{
-/*    private Sensor linearAccelerSensor;
+public class AccelerService extends Service implements SensorEventListener{
+    private Sensor linearAccelerSensor;
     private SensorManager sm;
     private Thread accelerThread;
     static PublishSubject<SensorEvent> accelerData = PublishSubject.create();
@@ -33,12 +32,13 @@ public class AccelerService extends Service{
     public void onCreate() {
         super.onCreate();
         // 중력 가속도를 제외한 가속도 센서 등록.
-        accelerThread = new Thread(this);
+        sm = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+        linearAccelerSensor = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        accelerThread.start();
+        sm.registerListener(this,linearAccelerSensor,10000000);
         return START_NOT_STICKY;
     }
 
@@ -46,16 +46,6 @@ public class AccelerService extends Service{
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public void run() {
-        //sm.registerListener(this,linearAccelerSensor,SensorManager.SENSOR_DELAY_NㅈORMAL);
-        // 가속도 센서에 listener등록.
-        sm = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
-        linearAccelerSensor = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        Log.d("THREADTEST",Thread.currentThread().getName());
-        sm.registerListener(this,linearAccelerSensor,10000000);
     }
 
     @Override
@@ -71,9 +61,9 @@ public class AccelerService extends Service{
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-    }*/
+    }
 ////////////////////////////////////////////////////////////////////////////////
-    private SensorManager sm;
+    /*private SensorManager sm;
     private Accelerometer am;
     CompositeDisposable myCompositeDisposable;
     private double lAccX,lAccY,lAccZ;
@@ -143,5 +133,5 @@ public class AccelerService extends Service{
     public void onDestroy() {
         super.onDestroy();
         myCompositeDisposable.clear();
-    }
+    }*/
 }

@@ -86,6 +86,7 @@ public class BeaconService extends Service implements Runnable {
                     Log.d("BeaconOnExit",proximityContext.getDeviceId());
                     return null;
                 })
+                // Enter는 beacon이 접근했을 때 동작. 하지만 해당 비콘이 범위 밖으로 exit해야 다시 실행 됨. 따라서 conTextChange를 사용하는것.
                 .onContextChange(proximityZoneContexts -> {
                     ProximityZoneContext[] contextsArray = proximityZoneContexts.toArray(new ProximityZoneContext[0]);
                     beacon_data.onNext(contextsArray);

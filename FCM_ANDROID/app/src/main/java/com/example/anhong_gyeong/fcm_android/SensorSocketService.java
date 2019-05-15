@@ -18,7 +18,7 @@ public class SensorSocketService extends Service implements Runnable{
     private ServerSocket sensorServer;
     Thread sensorSocketThread;
     Boolean istrue=true;
-    final int sensorPort = 6789;
+    final int sensorPort = 12344;
     static PublishSubject<String> sensorSocketData = PublishSubject.create();
     public static Observable<String> getSensorSocketObservable(){
         return sensorSocketData;
