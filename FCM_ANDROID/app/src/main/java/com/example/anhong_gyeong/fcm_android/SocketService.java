@@ -34,7 +34,6 @@ public class SocketService extends Service implements Runnable{
     public void onCreate() {
         super.onCreate();
         SocketThread = new Thread(this);
-
     }
 
     @Override

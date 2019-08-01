@@ -3,10 +3,12 @@ package com.example.anhong_gyeong.fcm_android;
 
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.SensorEvent;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.os.Build;
+import android.os.Handler;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -31,6 +33,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Map;
 
+import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
@@ -68,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
     ///
     ConstraintLayout layOut;
     ///
-    boolean flag,sleepFlag;
+    boolean flag,sleepFlag,otherSleepFlag;
     ///
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
         /////////////////
         flag = false;
         sleepFlag = false;
+        otherSleepFlag = false;
         /**
          * Function0 : 비콘 모니터링
          * Function1 : 권한 요청. Requirement class보면 여러 권한들 존재.
@@ -144,9 +148,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         buttonGps.setOnClickListener(v -> {
-            /*SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
-            String refreshedToken = prefs.getString("RefreshedToken", "");*/
-            //postGpsData(refreshedToken);
             player.start();
             textViewTop.setVisibility(View.VISIBLE);
             Animation anim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.alpha);
@@ -180,8 +181,8 @@ public class MainActivity extends AppCompatActivity {
              * 지금은 비콘이 3개라서 i%3해준것.
              */
             int tempSize = beaconList.size();
-            for(int i=0; i<tempSize*3; i++) {
-                  PostFcmData(beaconList.get(i%tempSize),refreshedToken,"Score");
+            for(int i=0; i<tempSize; i++) {
+                  PostFcmData(beaconList.get(i),refreshedToken,"Score");
             }
             //list.clear() 해줘야 함.
             //textViewFcm.setText(refreshedToken);
@@ -205,11 +206,12 @@ public class MainActivity extends AppCompatActivity {
         retrofit = new Retrofit.Builder()
                 //10.20.24.87
 
-                //.baseUrl("http://192.168.43.82:8080/")
+
                 //192.168.200.168
                 //.baseUrl("http://10.20.24.87:8080/")
                 //.baseUrl("http://192.168.200.122:8080/")
-                .baseUrl("http://192.168.0.11:8080/") // ucc iptime
+                .baseUrl("http://192.168.0.19:8080/") // ucc iptime
+                //.baseUrl("http://192.168.43.82:8080/") // 3189
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
@@ -257,33 +259,38 @@ public class MainActivity extends AppCompatActivity {
         );
     }
     public void calculateScore(){
-        if(currentSpeed > 60.0){
-            if(accel >= 7.5){
-                scoreHighway -= 10;
-            }
-            else{
-                if(scoreHighway < 100) {
-                    scoreHighway += 0.5;
+        if(finalScore -20.0 <= 0){
+            finalScore = 0;
+        }
+        else {
+            if (currentSpeed > 60.0) {
+                if (accel >= 7.5) {
+                    scoreHighway -= 10;
+                } else {
+                    if (scoreHighway < 100) {
+                        scoreHighway += 0.5;
+                    }
                 }
-            }
-            finalScore = scoreHighway;
-        }
-        else{
-            if(accel >= 7.5){
-                scoreGeneral -= 10;
-            }
-            else{
-                if(scoreGeneral < 100) {
-                    scoreGeneral += 0.5;
+                if (flag) {
+                    scoreHighway -= 20;
                 }
+                finalScore = scoreHighway;
+            } else {
+                if (accel >= 7.5) {
+                    scoreGeneral -= 10;
+                } else {
+                    if (scoreGeneral < 100) {
+                        scoreGeneral += 0.5;
+                    }
+                }
+                if (flag) {
+                    scoreGeneral -= 20;
+                }
+                finalScore = scoreGeneral;
             }
-            finalScore = scoreGeneral;
         }
-
-        if(flag == true){
-            finalScore -= 20;
-            flag = false;
-        }
+        String fScore = String.valueOf(finalScore);
+        textviewDemoScore.setText(fScore);
     }
     public void ReceiveSleepFlag(){
         myCompositeDisposable.add(SocketService.getSocketObservable()
@@ -297,13 +304,15 @@ public class MainActivity extends AppCompatActivity {
                      */
                     @Override
                     public void onNext(String s) {
-                        //textViewFcm.setText(refreshedToken);
+                        //calculate flag
                         flag = true;
-                        Log.d("RECEIVESLEEPFLAG","Before SLEEPFLAG: "+String.valueOf(sleepFlag));
+                        // 내 sleepFlag. fcm data에 put하여 전송할 용도.
                         sleepFlag = true;
-                        Log.d("RECEIVESLEEPFLAG","After SLEEPFLAG: "+String.valueOf(sleepFlag));
+
                         calculateScore();
-                        /////////
+                        /*String fScore = String.valueOf(finalScore);
+                        textviewDemoScore.setText(fScore);*/
+
 
                         // 공유 메모리. 내 아이디만 들어가 있음.
                         SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
@@ -311,13 +320,13 @@ public class MainActivity extends AppCompatActivity {
 
                         int tempSize = beaconList.size();
 
-                        for(int i=0; i<tempSize*3; i++) {
-                            PostFcmData(beaconList.get(i%tempSize),refreshedToken,s);
+                        for(int i=0; i<tempSize; i++) {
+                            PostFcmData(beaconList.get(i),refreshedToken,s);
                         }
                         //list.clear() 해줘야 함.
                         /**
                          * 이 아래로 다 지워줘야 됨.
-                         */
+                         *//*
                         imageArrow.setRotation(250);
 
                         // textViewDistance : 거리
@@ -334,16 +343,16 @@ public class MainActivity extends AppCompatActivity {
                         Animation anim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.alpha);
                         textViewTop.startAnimation(anim);
 
-                        /**
+                        *//**
                          * 화면 번쩍임
-                         */
+                         *//*
                         Animation backgroundAnim = new AlphaAnimation(0.0f, 1.0f);
                         backgroundAnim.setDuration(50); //You can manage the time of the blink with this parameter
                         backgroundAnim.setStartOffset(20);
                         backgroundAnim.setRepeatMode(Animation.REVERSE);
                         backgroundAnim.setRepeatCount(10);
                         //backgroundAnim.setRepeatCount(Animation.INFINITE);
-                        layOut.startAnimation(backgroundAnim);
+                        layOut.startAnimation(backgroundAnim);*/
 
 
                     }
@@ -373,16 +382,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onNext(String s) {
                         // 온도,습도,가속도,
-
-
-                        /*SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
-                        String refreshedToken = prefs.getString("RefreshedToken", "");
-                        for(int i=0; i<beaconList.size(); i++) {
-                            PostFcmData(beaconList.get(i),refreshedToken,s);
-                        }*/
                         Log.d("SensorSocket_Main","Received Sensor data in MainActivity.");
-
-                        //textViewFcm.setText(refreshedToken);
                     }
 
                     @Override
@@ -453,7 +453,6 @@ public class MainActivity extends AppCompatActivity {
                          * 뒤 2개 : FCM messgage로 전달 받은 상대방 gps
                          * 방향을 구함.
                          */
-
                         double otherLatitude = Double.parseDouble(gpsArray[0]);
                         double otherLongitude = Double.parseDouble(gpsArray[1]);
                         mDegree = getDirection(latitude, longitude, otherLatitude, otherLongitude);
@@ -471,6 +470,7 @@ public class MainActivity extends AppCompatActivity {
 
                         // 거리구하기
                         double distance = locationA.distanceTo(locationB);
+                        distance = (Math.round(distance*10000)/10000.0);
 
                         // 화살표 돌리는 코드
                         // imageArrow : 화살표 이미지 뷰
@@ -478,20 +478,26 @@ public class MainActivity extends AppCompatActivity {
 
                         // textViewDistance : 거리
                         // textViewScore : 점수
-                        textViewDistance.setText(Double.toString(distance));
-                        textViewDistance.setVisibility(View.VISIBLE);
-                        textViewSubScore.setVisibility(View.VISIBLE);
-                        textviewSubdistance.setVisibility(View.VISIBLE);
+                        textViewDistance.setText(Double.toString(distance)+"M");
+                        textViewDistance.setVisibility(View.VISIBLE);// 거리
+                        textviewSubdistance.setVisibility(View.VISIBLE); //거리에
+
+                        textViewSubScore.setText("위험 차량 주행중"); // 현재 주행중
+                        textviewDemoScore.setVisibility(View.INVISIBLE); // 내 스코어. 데이터 받았을 때는 INVISIBLE
                         //textViewScore.setText(stringStringMap.get("score"));
 
 
+                        // sleep = false or sleep = true로 전달됨.
+                        // sleepFlag는 다른 차량의 졸음 신호임.
+                        otherSleepFlag = Boolean.valueOf(stringStringMap.get("sleep"));
+                        //Log.d("ReceiveFCM",stringStringMap.get("sleep"));
                         Log.d("RECEIVEFCM","sleepFlag: " + String.valueOf(sleepFlag));
                         /**
                          * 화면 번쩍임
                          */
-                        if(sleepFlag) {
+                        if(otherSleepFlag) {
                             player.start();
-                            textViewTop.setVisibility(View.VISIBLE);
+                            textViewTop.setVisibility(View.VISIBLE);// 졸음 감지 차량!!
                             Animation anim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.alpha);
                             textViewTop.startAnimation(anim);
 
@@ -502,10 +508,28 @@ public class MainActivity extends AppCompatActivity {
                             backgroundAnim.setRepeatCount(10);
                             //backgroundAnim.setRepeatCount(Animation.INFINITE);
                             layOut.startAnimation(backgroundAnim);
-                            sleepFlag = false;
+                            otherSleepFlag = false;
                         }
                         /////////////////
 
+                        Handler delayHandler = new Handler();
+                        delayHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                imageArrow.setRotation(0);
+
+                                // textViewDistance : 거리
+                                // textViewScore : 점수
+                                //////
+                                textViewDistance.setVisibility(View.INVISIBLE);// 거리
+                                textviewSubdistance.setVisibility(View.INVISIBLE); //거리에
+                                textViewTop.setVisibility(View.INVISIBLE); // 졸음 감지 차량!!!
+                                textViewSubScore.setText("현재 주행중.."); // 현재 주행중
+                                textviewDemoScore.setVisibility(View.VISIBLE);
+
+
+                            }
+                        }, 5000);
 
                     }
 
@@ -538,25 +562,25 @@ public class MainActivity extends AppCompatActivity {
                         .subscribeWith(new DisposableObserver<Location>() {
                             @Override
                             public void onNext(Location location) {
-                                Log.d("postGpsData","postGpsData_first onNext call"+location.getLatitude() +","+ location.getLongitude());
+                                Log.d("postGpsData", "postGpsData_first onNext call" + location.getLatitude() + "," + location.getLongitude());
                                 ///timer
 
-                                currentSpeed = ((location.getSpeed()*3600)/1000);
+                                currentSpeed = ((location.getSpeed() * 3600) / 1000);
                                 String tempSpeed = String.valueOf((currentSpeed));
-                                Log.d("getSpeed()",tempSpeed);
+                                Log.d("getSpeed()", tempSpeed);
                                 textViewSpeed.setText(tempSpeed);
                                 calculateScore();
-                                String fScore = String.valueOf(finalScore);
-                                textviewDemoScore.setText(fScore);
+                                /*String fScore = String.valueOf(finalScore);
+                                textviewDemoScore.setText(fScore);*/
 
                                 // ReceiveFcm함수에서도 longitude, latitude를 사용하므로 데이터 변화가 있을시마다 저장.
                                 latitude = location.getLatitude();
                                 longitude = location.getLongitude();
                                 String gps_latitude = Double.toString(latitude);
                                 String gps_longitude = Double.toString(longitude);
-                                String gps = gps_latitude+","+gps_longitude;
+                                String gps = gps_latitude + "," + gps_longitude;
                                 //////////////
-                                Log.d("GPSCALLED",gps);
+                                Log.d("GPSCALLED", gps);
                                 textViewGps.setText(gps);
 
                                 JSONObject paramObject = new JSONObject();
@@ -566,7 +590,6 @@ public class MainActivity extends AppCompatActivity {
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
-
                                 myCompositeDisposable.add(service.postGps(paramObject.toString())
                                         .observeOn(AndroidSchedulers.mainThread())
                                         .subscribeOn(Schedulers.io())
@@ -583,7 +606,7 @@ public class MainActivity extends AppCompatActivity {
 
                                             @Override
                                             public void onComplete() {
-                                                Log.d("postGps","Completed postGps");
+                                                Log.d("postGps", "Completed postGps");
                                             }
                                         })
                                 );
@@ -600,39 +623,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                         })
         );
-        ////
-//        String gps_longitude = Double.toString(longitude);
-//        String gps_latitude = Double.toString(latitude);
-//        String gps = gps_latitude+","+gps_longitude;
-//
-//        JSONObject paramObject = new JSONObject();
-//        try {
-//            paramObject.put("user_id", userId);
-//            paramObject.put("gps", gps);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//
-//        myCompositeDisposable.add(service.postGps(paramObject.toString())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribeOn(Schedulers.io())
-//                .subscribeWith(new DisposableObserver<RetrofitRepo>() {
-//                    @Override
-//                    public void onNext(RetrofitRepo retrofitRepo) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onError(Throwable e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                    @Override
-//                    public void onComplete() {
-//                        Log.d("postGps","Completed postGps");
-//                    }
-//                })
-//        );
     }
     /**
      * FCM message를 전송해주는 함수. 비콘 ID를 list로 관리 + 서비스에서 스코어링 임계치 넘은 event가 발생시에 PostFcmData실행. 그냥 subscribe(PostFcmData())해줘도 될 듯.
@@ -646,10 +636,12 @@ public class MainActivity extends AppCompatActivity {
             paramObject.put("beacon_id", beaconId);
             paramObject.put("user_id", userId);
             paramObject.put("score", score);
-            //paramObject.put("sleepFlag",sleepFlag);
+            paramObject.put("sleepFlag",sleepFlag);
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        // sleepFlag 보내줬으므로 다시 false.
+        sleepFlag = false;
         myCompositeDisposable.add(service.postFcm(paramObject.toString())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())

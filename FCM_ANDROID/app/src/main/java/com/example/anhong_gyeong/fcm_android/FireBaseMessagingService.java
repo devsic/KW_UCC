@@ -14,6 +14,7 @@ import android.util.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -41,6 +42,7 @@ public class FireBaseMessagingService extends FirebaseMessagingService {
         // server측에서 body에 data라는 이름으로 보내주기 때문.
         // Key,value형태.
         if (remoteMessage.getData().size() > 0) {
+            Log.d(TAG, "Message data payload: " + remoteMessage.getMessageType());
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             if (true) {
                 // Message로 받아온 Data에 대한 처리.
