@@ -30,10 +30,10 @@ public class GpsService extends Service implements Runnable{
     private static final int LOCATION_INTERVAL = 3000;
     private static final float LOCATION_DISTANCE = 3f;
 
-    static PublishSubject<Location> gps_data = PublishSubject.create();
+    static PublishSubject<Location> gpsData = PublishSubject.create();
 
     public static Observable<Location> getGpsObservable(){
-        return gps_data;
+        return gpsData;
     }
     public GpsService() {
 
@@ -51,7 +51,7 @@ public class GpsService extends Service implements Runnable{
         @Override
         public void onLocationChanged(Location location) {
 
-            gps_data.onNext(location);
+            gpsData.onNext(location);
         }
 
         @Override
@@ -123,6 +123,4 @@ public class GpsService extends Service implements Runnable{
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         }
     }
-
-
 }
