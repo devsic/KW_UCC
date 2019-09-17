@@ -14,9 +14,7 @@ import android.util.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import java.util.HashMap;
 import java.util.Map;
-
 
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;

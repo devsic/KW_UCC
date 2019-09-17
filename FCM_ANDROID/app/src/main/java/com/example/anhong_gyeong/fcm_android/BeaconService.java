@@ -12,12 +12,8 @@ import com.estimote.proximity_sdk.api.ProximityZone;
 import com.estimote.proximity_sdk.api.ProximityZoneBuilder;
 import com.estimote.proximity_sdk.api.ProximityZoneContext;
 
-import java.util.Set;
-
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
 
 public class BeaconService extends Service implements Runnable {
     private Context context;

@@ -1,8 +1,9 @@
 package com.example.anhong_gyeong.fcm_android;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import android.content.SharedPreferences;
 import android.util.Log;
+
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 
 public class FirebaseInstanceIDService extends FirebaseInstanceIdService {
@@ -20,7 +21,7 @@ public class FirebaseInstanceIDService extends FirebaseInstanceIdService {
 
         SharedPreferences pref = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
-        // 공유 메모리에 저장.  
+        // 공유 메모리에 저장.
         editor.putString("RefreshedToken",refreshedToken);
         editor.commit();
     }
