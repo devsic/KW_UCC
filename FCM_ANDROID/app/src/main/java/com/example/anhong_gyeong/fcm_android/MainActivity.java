@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     TextView textViewSpeed, textViewGps, textViewAccel;
     ConstraintLayout layOut;
     boolean flag, sleepFlag, otherSleepFlag;
+    String BASE_URL = "http://192.168.0.19:8080/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,32 +147,26 @@ public class MainActivity extends AppCompatActivity {
 //
 //        });
 
-        /**
-         * 자동화 해놨으므로 지워줘도 됨.
-         */
+        // demo용 code
         // fcm call. List에 존재하는 비콘 id로 다 보내고 list clear.
         buttonFcm.setOnClickListener(v -> {
-            //PostFcmData();
-
             SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
             String refreshedToken = prefs.getString("RefreshedToken", "");
             Log.d("RefreshedPreference", refreshedToken);
-            /**
-             * PostFcmData는 버튼 클릭이 아닌, ReceiveFlag()함수에서 call해줄것임. 이건 데모용.
-             * "Score"에는 스코어링한 data가 들어갈 것.
-             * 지금은 비콘이 3개라서 i%3해준것.
-             */
+
             int tempSize = beaconList.size();
             for (int i = 0; i < tempSize; i++) {
                 PostFcmData(beaconList.get(i), refreshedToken, "Score");
             }
-            //list.clear() 해줘야 함.
-            //textViewFcm.setText(refreshedToken);
-            //ReceiveFlag();
+//            beaconList.clear();
         });
+
+        // 졸음 flag 받은 경우
         ReceiveSleepFlag();
+        // 환경 센서값 받은 경우
         ReceiveSensorData();
-        ReceiveAccelerometer();
+        // 가속도 센서값 받은 경우
+        receiveAccelerometer();
         // fcm Message 받았을 때 main에서의 동작 구현.
         ReceiveFcm();
         // beacon 범위내에 들어올 때 beaconId list에 저장.
@@ -182,17 +177,14 @@ public class MainActivity extends AppCompatActivity {
         String refreshedToken = prefs.getString("RefreshedToken", "");
         postGpsData(refreshedToken);
     }
-
+    //retrofit 초기화
     public void initRetrofit() {
         retrofit = new Retrofit.Builder()
                 //10.20.24.87
-
-
                 //192.168.200.168
-                //.baseUrl("http://10.20.24.87:8080/")
-                //.baseUrl("http://192.168.200.122:8080/")
-                .baseUrl("http://192.168.0.19:8080/") // ucc iptime
-                //.baseUrl("http://192.168.43.82:8080/") // 3189
+                //192.168.200.122
+                //192.168.43.82 // 3189
+                .baseUrl(BASE_URL) // ucc iptime
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
@@ -200,17 +192,14 @@ public class MainActivity extends AppCompatActivity {
         service = retrofit.create(RetrofitService.class);
 
     }
-
-    public void ReceiveAccelerometer() {
+    // 가속도 센서 값 받았을때의 callback
+    public void receiveAccelerometer() {
         myCompositeDisposable.add(AccelerService.getAccelerObservable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribeWith(new DisposableObserver<SensorEvent>() {
                     @Override
                     public void onNext(SensorEvent sensorEvent) {
-
-                        // .setText(sensorEvent.toString());
-
                         lAccX = sensorEvent.values[0];
                         lAccY = sensorEvent.values[1];
                         lAccZ = sensorEvent.values[2];
@@ -221,15 +210,12 @@ public class MainActivity extends AppCompatActivity {
 
                         accel = Math.sqrt((lAccX * lAccX) + (lAccY * lAccY) + (lAccZ * lAccZ));
                         accel = Math.round(accel * 100) / 100.0;
-                        //textViewAccel.setText(lAccX+" "+lAccY+" "+lAccZ);
                         textViewAccel.setText(String.valueOf(accel));
-                        Log.d("MainAccelerometer", String.valueOf(accel));
-
                     }
 
                     @Override
                     public void onError(Throwable e) {
-
+                        e.printStackTrace();
                     }
 
                     @Override
@@ -241,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    // 점수 scoring
     public void calculateScore() {
         if (finalScore - 20.0 <= 0) {
             finalScore = 0;
@@ -274,17 +261,12 @@ public class MainActivity extends AppCompatActivity {
         String fScore = String.valueOf(finalScore);
         textviewDemoScore.setText(fScore);
     }
-
+    // 수면 flag 받았을 경우
     public void ReceiveSleepFlag() {
         myCompositeDisposable.add(SocketService.getSocketObservable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribeWith(new DisposableObserver<String>() {
-                    /**
-                     * @param s : socket으로 받은 data. 실제 구현시에는 받자마자 발행이 아닌, 데이터 처리 후 임게치 초과시에 데이터 발행.
-                     *          이것 외에도, 내 스코어를 표시하기 위한 데이터 발행이 추가되어야 할듯.
-                     *          위 2개는 결국 스코어링을 어떻게 하냐에 따라 달라질 듯
-                     */
                     @Override
                     public void onNext(String s) {
                         //calculate flag
@@ -292,57 +274,24 @@ public class MainActivity extends AppCompatActivity {
                         // 내 sleepFlag. fcm data에 put하여 전송할 용도.
                         sleepFlag = true;
 
+                        // sleepFlag를 받을 때 마다 점수 계산
                         calculateScore();
-                        /*String fScore = String.valueOf(finalScore);
-                        textviewDemoScore.setText(fScore);*/
-
-
-                        // 공유 메모리. 내 아이디만 들어가 있음.
+                        // 공유 메모리. 내 fcm token id만 저장.
                         SharedPreferences prefs = getSharedPreferences("RefreshedPreference", MODE_PRIVATE);
                         String refreshedToken = prefs.getString("RefreshedToken", "");
 
                         int tempSize = beaconList.size();
 
+                        // 주위 차량에 알림.
                         for (int i = 0; i < tempSize; i++) {
                             PostFcmData(beaconList.get(i), refreshedToken, s);
                         }
-                        //list.clear() 해줘야 함.
-                        /**
-                         * 이 아래로 다 지워줘야 됨.
-                         *//*
-                        imageArrow.setRotation(250);
-
-                        // textViewDistance : 거리
-                        // textViewScore : 점수
-                        textViewDistance.setText(Double.toString(51.3));
-                        textViewDistance.setVisibility(View.VISIBLE);
-                        textViewSubScore.setVisibility(View.VISIBLE);
-                        textviewSubdistance.setVisibility(View.VISIBLE);
-                        //////////
-
-
-                        player.start();
-                        textViewTop.setVisibility(View.VISIBLE);
-                        Animation anim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.alpha);
-                        textViewTop.startAnimation(anim);
-
-                        *//**
-                         * 화면 번쩍임
-                         *//*
-                        Animation backgroundAnim = new AlphaAnimation(0.0f, 1.0f);
-                        backgroundAnim.setDuration(50); //You can manage the time of the blink with this parameter
-                        backgroundAnim.setStartOffset(20);
-                        backgroundAnim.setRepeatMode(Animation.REVERSE);
-                        backgroundAnim.setRepeatCount(10);
-                        //backgroundAnim.setRepeatCount(Animation.INFINITE);
-                        layOut.startAnimation(backgroundAnim);*/
-
-
+                        //list.clear()
                     }
 
                     @Override
                     public void onError(Throwable e) {
-
+                        e.printStackTrace();
                     }
 
                     @Override
@@ -352,26 +301,21 @@ public class MainActivity extends AppCompatActivity {
                 })
         );
     }
-
+    // 라즈베리 파이로부터 받아오는 센서 값에 대한 처리
     public void ReceiveSensorData() {
         myCompositeDisposable.add(SensorSocketService.getSensorSocketObservable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribeWith(new DisposableObserver<String>() {
-                    /**
-                     * @param s : socket으로 받은 data. 실제 구현시에는 받자마자 발행이 아닌, 데이터 처리 후 임게치 초과시에 데이터 발행.
-                     *          이것 외에도, 내 스코어를 표시하기 위한 데이터 발행이 추가되어야 할듯.
-                     *          위 2개는 결국 스코어링을 어떻게 하냐에 따라 달라질 듯
-                     */
                     @Override
                     public void onNext(String s) {
-                        // 온도,습도,가속도,
+                        // 온도,습도에 관한 처리부
                         Log.d("SensorSocket_Main", "Received Sensor data in MainActivity.");
                     }
 
                     @Override
                     public void onError(Throwable e) {
-
+                        e.printStackTrace();
                     }
 
                     @Override
@@ -382,9 +326,8 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    /**
-     * ProximityContext의 변화가 있을때 마다 데이터가 발행
-     */
+    // 주위 차량이 접근했을 경우에 대한 callback
+    // ProximityContext의 변화로 측정한다.
     public void SaveBeaconId() {
         myCompositeDisposable.add(BeaconService.getBeaconObservable()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -396,18 +339,15 @@ public class MainActivity extends AppCompatActivity {
                             bId = proximityZoneContexts[i].getDeviceId();
                             if (!beaconList.contains(bId)) {
                                 beaconList.add(bId);
-                                Log.d("OnNext Beacon add: ", bId);
-                                //PostFcmData(bId,FirebaseInstanceIDService.refreshedToken,"ScoreData");
                             }
                         }
                         for (int i = 0; i < beaconList.size(); i++) {
-                            Log.d("Beacon List " + i, beaconList.get(i));
                         }
                     }
 
                     @Override
                     public void onError(Throwable e) {
-
+                        e.printStackTrace();
                     }
 
                     @Override
@@ -418,10 +358,9 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    /**
-     * onNext : FCM Message 받았을 때 gps값을 통하여 logic 구현.
-     * FireBaseMessagingService의 onMessageReceived가 호출되어 data(Observable객체)가 발행됐을 때 subscribeWith로 구독하여 소비하는 과정.
-     */
+
+    // FCM의 onMessageReceived가 호출됐을 때의 callback
+    // 상대방의 gps를 받아 나와 방향 및 거리를 계산해주는 함수
     public void ReceiveFcm() {
         myCompositeDisposable.add(FireBaseMessagingService.getObservable()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -457,7 +396,6 @@ public class MainActivity extends AppCompatActivity {
                         distance = (Math.round(distance * 10000) / 10000.0);
 
                         // 화살표 돌리는 코드
-                        // imageArrow : 화살표 이미지 뷰
                         imageArrow.setRotation(mDegree);
 
                         // textViewDistance : 거리
@@ -468,17 +406,13 @@ public class MainActivity extends AppCompatActivity {
 
                         textViewSubScore.setText("위험 차량 주행중"); // 현재 주행중
                         textviewDemoScore.setVisibility(View.INVISIBLE); // 내 스코어. 데이터 받았을 때는 INVISIBLE
-                        //textViewScore.setText(stringStringMap.get("score"));
 
 
                         // sleep = false or sleep = true로 전달됨.
                         // sleepFlag는 다른 차량의 졸음 신호임.
                         otherSleepFlag = Boolean.valueOf(stringStringMap.get("sleep"));
-                        //Log.d("ReceiveFCM",stringStringMap.get("sleep"));
-                        Log.d("RECEIVEFCM", "sleepFlag: " + String.valueOf(sleepFlag));
-                        /**
-                         * 화면 번쩍임
-                         */
+
+                        // 화면 flashing
                         if (otherSleepFlag) {
                             player.start();
                             textViewTop.setVisibility(View.VISIBLE);// 졸음 감지 차량!!
@@ -490,28 +424,20 @@ public class MainActivity extends AppCompatActivity {
                             backgroundAnim.setStartOffset(20);
                             backgroundAnim.setRepeatMode(Animation.REVERSE);
                             backgroundAnim.setRepeatCount(10);
-                            //backgroundAnim.setRepeatCount(Animation.INFINITE);
                             layOut.startAnimation(backgroundAnim);
                             otherSleepFlag = false;
                         }
-                        /////////////////
-
+                        // 5초의 delay후 원상태로 복구
                         Handler delayHandler = new Handler();
                         delayHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 imageArrow.setRotation(0);
-
-                                // textViewDistance : 거리
-                                // textViewScore : 점수
-                                //////
                                 textViewDistance.setVisibility(View.INVISIBLE);// 거리
                                 textviewSubdistance.setVisibility(View.INVISIBLE); //거리에
                                 textViewTop.setVisibility(View.INVISIBLE); // 졸음 감지 차량!!!
                                 textViewSubScore.setText("현재 주행중.."); // 현재 주행중
                                 textviewDemoScore.setVisibility(View.VISIBLE);
-
-
                             }
                         }, 5000);
 
@@ -530,13 +456,9 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-
-    /**
-     * Service에서 정해진 초 or 거리의 변화가 생길시에 location changed가 call됨. 여기서 onNext로 location 객체 발행
-     * 이 함수에서는 발행된 location객체에서 data를 파싱하여 서버로 post.
-     * 내 token id를 가지고 gps 저장.
-     */
-
+    // gps의 변화가 생길 때 callback.
+    // 발행한 location 객체에서 data parsing 후 server로 전송.
+    // 내 token id와 함께 server로 전송한다.
     public void postGpsData(String userId) {
         //body에 넣을 데이터
         myCompositeDisposable.add(GpsService.getGpsObservable()
@@ -545,16 +467,12 @@ public class MainActivity extends AppCompatActivity {
                 .subscribeWith(new DisposableObserver<Location>() {
                     @Override
                     public void onNext(Location location) {
-                        Log.d("postGpsData", "postGpsData_first onNext call" + location.getLatitude() + "," + location.getLongitude());
-                        ///timer
 
                         currentSpeed = ((location.getSpeed() * 3600) / 1000);
                         String tempSpeed = String.valueOf((currentSpeed));
                         Log.d("getSpeed()", tempSpeed);
                         textViewSpeed.setText(tempSpeed);
                         calculateScore();
-                                /*String fScore = String.valueOf(finalScore);
-                                textviewDemoScore.setText(fScore);*/
 
                         // ReceiveFcm함수에서도 longitude, latitude를 사용하므로 데이터 변화가 있을시마다 저장.
                         latitude = location.getLatitude();
@@ -562,8 +480,7 @@ public class MainActivity extends AppCompatActivity {
                         String gps_latitude = Double.toString(latitude);
                         String gps_longitude = Double.toString(longitude);
                         String gps = gps_latitude + "," + gps_longitude;
-                        //////////////
-                        Log.d("GPSCALLED", gps);
+
                         textViewGps.setText(gps);
 
                         JSONObject paramObject = new JSONObject();
@@ -573,6 +490,7 @@ public class MainActivity extends AppCompatActivity {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
+                        // retrofit 호출
                         myCompositeDisposable.add(service.postGps(paramObject.toString())
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribeOn(Schedulers.io())
@@ -589,7 +507,6 @@ public class MainActivity extends AppCompatActivity {
 
                                     @Override
                                     public void onComplete() {
-                                        Log.d("postGps", "Completed postGps");
                                     }
                                 })
                         );
@@ -597,7 +514,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(Throwable e) {
-
+                        e.printStackTrace();
                     }
 
                     @Override
@@ -609,12 +526,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * FCM message를 전송해주는 함수. 비콘 ID를 list로 관리 + 서비스에서 스코어링 임계치 넘은 event가 발생시에 PostFcmData실행. 그냥 subscribe(PostFcmData())해줘도 될 듯.
-     * beaconId : 상대방 beaconId. 이를 통해 서버에 저장된 target token id를 접근
-     * user_id : 내 gps를 얻기 위한 token id.
+     *
+     * @param beaconId : 주위 차량에 설치된 beacon Id. 이를 이용해 server에서 target의 token id를 찾는다.
+     * @param userId : 내 fcm token id. // 서버에 저장된 gps값을 찾기 위해.
+     * @param score : 내 점수
      */
     public void PostFcmData(String beaconId, String userId, String score) {
-        // body에 넣을 데이터
         JSONObject paramObject = new JSONObject();
         try {
             paramObject.put("beacon_id", beaconId);
@@ -632,7 +549,6 @@ public class MainActivity extends AppCompatActivity {
                 .subscribeWith(new DisposableObserver<RetrofitRepo>() {
                     @Override
                     public void onNext(RetrofitRepo retrofitRepo) {
-                        Log.d("postFCM", "Completed postFCM");
                     }
 
                     @Override
@@ -642,7 +558,6 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onComplete() {
-                        Log.d("postFCM", "Completed postFCM");
                     }
                 })
         );

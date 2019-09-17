@@ -50,16 +50,12 @@ public class SensorSocketService extends Service implements Runnable{
         try {
             sensorServer=new ServerSocket(sensorPort);
             Socket socket= null;
-            Log.d("Green_Sensor","success sensor socket");
             socket = sensorServer.accept();
-            Log.d("Green_Sensor","success sensor accept");
             while(istrue) {
                 try {
-                    Log.d("Green_Sensor","While While While");
                     //습도,온도,가속도
                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     String str = reader.readLine();
-                    Log.d("Green_Sensor","sensor socket:"+str);
                     sensorSocketData.onNext(str);
 
                 } catch (IOException e) {

@@ -9,6 +9,7 @@ import retrofit2.http.Body;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 
+// retrofit의 return을 RxJava 사용을 위해 Observable로 바꿈.
 public interface RetrofitService {
     @Headers("Content-Type: application/json")
     @POST("infos/gps/")

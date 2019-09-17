@@ -24,12 +24,6 @@ import io.reactivex.subjects.PublishSubject;
 public class FireBaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
-    /**
-     * data : Observable. data 발행. PublishSubject는 Observable을 상속받음.
-     * getObservable : Acticity측에서 Obesrvable 참조 위한 getter.
-     * Map<String,String> : Server에서 body에 담아서 보내준 FCM message. gps와 score 정보가 담겨있음.
-     * 원래 이렇게 static으로 하여 구현하는가? issue는 없는가? // MainActivity에서 Observable 객체 참조하려고 이렇게 사용했음.
-     */
     static PublishSubject<Map<String,String>> data = PublishSubject.create();
 
     public static Observable<Map<String,String>> getObservable(){
@@ -46,7 +40,6 @@ public class FireBaseMessagingService extends FirebaseMessagingService {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             if (true) {
                 // Message로 받아온 Data에 대한 처리.
-                // remoteMessage.getData() 발행.
                 data.onNext(remoteMessage.getData());
             } else {
                 handleNow();

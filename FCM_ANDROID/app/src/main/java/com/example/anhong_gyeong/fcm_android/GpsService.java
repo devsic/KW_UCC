@@ -25,8 +25,8 @@ public class GpsService extends Service implements Runnable{
     double longitude,latitude;
     LocationManager Im;
     Thread gpsThread;
-    private static final String TAG = "BOOMBOOMTESTGPS";
-    private LocationManager mLocationManager = null;
+    private static final String TAG = "TestGps";
+    private LocationManager locManager = null;
     private static final int LOCATION_INTERVAL = 3000;
     private static final float LOCATION_DISTANCE = 3f;
 
@@ -98,7 +98,7 @@ public class GpsService extends Service implements Runnable{
         // LocationMager에 대해 listener 등록.
         // network, gps에 대해 각각 리스너를 위에서 만들어줬고 그에 대해 동작 수행.
         try {
-            mLocationManager.requestLocationUpdates(
+            locManager.requestLocationUpdates(
                     LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
                     mLocationListeners[1]);
             Log.d("GPSCALEED","GPS THREAD IS CALLED");
@@ -108,7 +108,7 @@ public class GpsService extends Service implements Runnable{
             Log.d(TAG, "network provider does not exist, " + ex.getMessage());
         }
         try {
-            mLocationManager.requestLocationUpdates(
+            locManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
                     mLocationListeners[0]);
         } catch (java.lang.SecurityException ex) {
@@ -119,8 +119,8 @@ public class GpsService extends Service implements Runnable{
     }
 
     private void initializeLocationManager() {
-        if (mLocationManager == null) {
-            mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        if (locManager == null) {
+            locManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         }
     }
 }

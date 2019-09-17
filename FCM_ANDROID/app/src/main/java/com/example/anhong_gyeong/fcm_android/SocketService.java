@@ -57,19 +57,13 @@ public class SocketService extends Service implements Runnable{
 
             // 여기 while(1)로 감싸주기.
             // accept시에 thread 새로 생성 및 Runnable 등록. 이렇게 하면 센서도 같이 받을 수 있을듯.
-            // 하지만, 센서와 sleep을 표시할 flag를 client에서 추가로 전송 해줘야 할 듯.
-
+            // 하지만, 센서와 sleep을 표시할 flag를 라즈베리 파이에서 추가로 전송 해줘야 할 듯.
             // socket이 끊길시에 처리는 client에서 해줘야 한다고 함. https://stackoverflow.com/questions/151590/how-to-detect-a-remote-side-socket-close
             socket = server.accept();
-            Log.d("Green","success accept");
             while(istrue) {
                 try {
-                    Log.d("Green","While While While");
                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
                     String str = reader.readLine();
-
-                    Log.d("Green","socket:"+str);
                     socket_data.onNext(str);
 
                 } catch (IOException e) {

@@ -22,10 +22,10 @@ import kotlin.jvm.functions.Function1;
 public class BeaconService extends Service implements Runnable {
     private Context context;
     Thread BeaconThread;
-    static PublishSubject<ProximityZoneContext[]> beacon_data = PublishSubject.create();
+    static PublishSubject<ProximityZoneContext[]> beaconData = PublishSubject.create();
 
     public static Observable<ProximityZoneContext[]> getBeaconObservable(){
-        return beacon_data;
+        return beaconData;
     }
     public BeaconService() {
     }
@@ -54,8 +54,6 @@ public class BeaconService extends Service implements Runnable {
     public void onDestroy() {
         //proximityObserver.stop();
         super.onDestroy();
-        Log.d("BeaconService","Service onDestroy called");
-
     }
 
     @Override
@@ -64,7 +62,6 @@ public class BeaconService extends Service implements Runnable {
         ProximityObserver proximityObserver =
                 new ProximityObserverBuilder(context, ((MyApplication) context).cloudCredentials)
                         .onError(throwable -> {
-                            Log.e("app", "proximity observer error: " + throwable);
                             throwable.printStackTrace();
                             return null;
                         })
@@ -77,8 +74,6 @@ public class BeaconService extends Service implements Runnable {
                 .forTag("monitoringexample-8mi")
                 .inCustomRange(5.0)
                 .onEnter(proximityContext -> {
-                    //beacon_data.onNext(proximityContext.getDeviceId());
-                    //beacon_data.onComplete();
                     Log.d("BeaconOnEnter",proximityContext.getDeviceId());
                     return null;
                 })
@@ -89,26 +84,7 @@ public class BeaconService extends Service implements Runnable {
                 // Enter는 beacon이 접근했을 때 동작. 하지만 해당 비콘이 범위 밖으로 exit해야 다시 실행 됨. 따라서 conTextChange를 사용하는것.
                 .onContextChange(proximityZoneContexts -> {
                     ProximityZoneContext[] contextsArray = proximityZoneContexts.toArray(new ProximityZoneContext[0]);
-                    beacon_data.onNext(contextsArray);
-                    /*String beacon1ID = contextsArray[0].getDeviceId();
-                    Log.d("BeaconOnContext",beacon1ID);
-                    */
-
-                    /*
-                    while(iter.hasNext()){
-                        Log.d("BeaconOnContext",iter.getClass().getName());
-                    }*/
-                    /*HashSet<ProximityZoneContext> temp = new HashSet<ProximityZoneContext>();
-                    temp.addAll(proximityZoneContexts);
-                    Iterator<ProximityZoneContext> iter= temp.iterator();
-                    while(iter.hasNext()){
-                        Log.d("BeaconOnContext",iter.toString());
-                    }*/
-                    /*Iterator<ProximityZoneContext> iter = (Iterator<ProximityZoneContext>) proximityZoneContexts.iterator();
-                    while(iter.hasNext()){
-                        Log.d("BeaconOnContext",iter.toString());
-                    }*/
-                    //Log.d("BeaconOnContext",proximityZoneContexts.toString());
+                    beaconData.onNext(contextsArray);
                     return null;
                 })
                 .build();
